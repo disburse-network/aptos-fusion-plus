@@ -251,126 +251,22 @@ module aptos_fusion_plus::resolver_registry_tests {
     }
 
     #[test]
-    fun test_resolver_timestamps() {
-        let (admin, resolver, _) = setup_test();
-
-        let resolver_address = signer::address_of(&resolver);
-
-        // Record time before registration
-        let before_registration = timestamp::now_seconds();
-
-        // Register resolver
-        resolver_registry::register_resolver(&admin, resolver_address);
-
-        let registered_at =
-            resolver_registry::get_resolver_registered_at(resolver_address);
-        let initial_status_change =
-            resolver_registry::get_resolver_last_status_change(resolver_address);
-
-        // Verify timestamps are reasonable
-        assert!(registered_at >= before_registration, 0);
-        assert!(initial_status_change == registered_at, 0);
-
-        // Fast forward time and deactivate
-        timestamp::fast_forward_seconds(100);
-
-        resolver_registry::deactivate_resolver(&admin, resolver_address);
-
-        let after_deactivation =
-            resolver_registry::get_resolver_last_status_change(resolver_address);
-        assert!(after_deactivation > initial_status_change, 0);
-
-        // Fast forward time and reactivate
-        timestamp::fast_forward_seconds(100);
-
-        resolver_registry::reactivate_resolver(&admin, resolver_address);
-
-        let after_reactivation =
-            resolver_registry::get_resolver_last_status_change(resolver_address);
-        assert!(after_reactivation > after_deactivation, 0);
-    }
-
-    #[test]
-    fun test_multiple_status_changes() {
-        let (admin, resolver, _) = setup_test();
-
-        let resolver_address = signer::address_of(&resolver);
-
-        // Register resolver
-        resolver_registry::register_resolver(&admin, resolver_address);
-        assert!(resolver_registry::is_active_resolver(resolver_address), 0);
-
-        let initial_status_change =
-            resolver_registry::get_resolver_last_status_change(resolver_address);
-
-        // Fast forward time and deactivate
-        timestamp::fast_forward_seconds(50);
-        resolver_registry::deactivate_resolver(&admin, resolver_address);
-        assert!(resolver_registry::is_active_resolver(resolver_address) == false, 0);
-
-        let after_deactivation =
-            resolver_registry::get_resolver_last_status_change(resolver_address);
-        assert!(after_deactivation > initial_status_change, 0);
-
-        // Fast forward time and reactivate
-        timestamp::fast_forward_seconds(50);
-        resolver_registry::reactivate_resolver(&admin, resolver_address);
-        assert!(resolver_registry::is_active_resolver(resolver_address), 0);
-
-        let after_reactivation =
-            resolver_registry::get_resolver_last_status_change(resolver_address);
-        assert!(after_reactivation > after_deactivation, 0);
-
-        // Fast forward time and deactivate again
-        timestamp::fast_forward_seconds(50);
-        resolver_registry::deactivate_resolver(&admin, resolver_address);
-        assert!(resolver_registry::is_active_resolver(resolver_address) == false, 0);
-
-        let final_status_change =
-            resolver_registry::get_resolver_last_status_change(resolver_address);
-        assert!(final_status_change > after_reactivation, 0);
-    }
-
-    #[test]
     fun test_resolver_lifecycle_complete() {
         let (admin, resolver, _) = setup_test();
 
         let resolver_address = signer::address_of(&resolver);
 
-        // 1. Register resolver
+        // Register resolver
         resolver_registry::register_resolver(&admin, resolver_address);
         assert!(resolver_registry::is_active_resolver(resolver_address), 0);
 
-        let registered_at =
-            resolver_registry::get_resolver_registered_at(resolver_address);
-        assert!(registered_at > 0, 0);
-
-        // 2. Fast forward time and deactivate resolver
-        timestamp::fast_forward_seconds(100);
+        // Deactivate resolver
         resolver_registry::deactivate_resolver(&admin, resolver_address);
-        assert!(resolver_registry::is_active_resolver(resolver_address) == false, 0);
+        assert!(!resolver_registry::is_active_resolver(resolver_address), 0);
 
-        let deactivated_at =
-            resolver_registry::get_resolver_last_status_change(resolver_address);
-        assert!(deactivated_at > registered_at, 0);
-
-        // 3. Fast forward time and reactivate resolver
-        timestamp::fast_forward_seconds(100);
+        // Reactivate resolver
         resolver_registry::reactivate_resolver(&admin, resolver_address);
         assert!(resolver_registry::is_active_resolver(resolver_address), 0);
-
-        let reactivated_at =
-            resolver_registry::get_resolver_last_status_change(resolver_address);
-        assert!(reactivated_at > deactivated_at, 0);
-
-        // 4. Fast forward time and final deactivation
-        timestamp::fast_forward_seconds(100);
-        resolver_registry::deactivate_resolver(&admin, resolver_address);
-        assert!(resolver_registry::is_active_resolver(resolver_address) == false, 0);
-
-        let final_deactivation =
-            resolver_registry::get_resolver_last_status_change(resolver_address);
-        assert!(final_deactivation > reactivated_at, 0);
     }
 
     #[test]
@@ -404,5 +300,169 @@ module aptos_fusion_plus::resolver_registry_tests {
 
         assert!(resolver_registry::is_active_resolver(resolver1_address), 0); // Still active
         assert!(resolver_registry::is_active_resolver(resolver2_address) == false, 0);
+    }
+
+    // - - - - FIXED REMOVED TESTS - - - -
+
+    #[test]
+    fun test_resolver_boundary_addresses() {
+        let (admin, _, _) = setup_test();
+
+        // Test minimum address (0x0)
+        let min_address = @0x0;
+        resolver_registry::register_resolver(&admin, min_address);
+        assert!(resolver_registry::is_active_resolver(min_address), 0);
+        resolver_registry::deactivate_resolver(&admin, min_address);
+        assert!(resolver_registry::is_active_resolver(min_address) == false, 0);
+
+        // Test maximum address (0xffff...)
+        let max_address = @0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+        resolver_registry::register_resolver(&admin, max_address);
+        assert!(resolver_registry::is_active_resolver(max_address), 0);
+        resolver_registry::deactivate_resolver(&admin, max_address);
+        assert!(resolver_registry::is_active_resolver(max_address) == false, 0);
+    }
+
+    #[test]
+    fun test_resolver_concurrent_registration() {
+        let (admin, resolver1, resolver2) = setup_test();
+
+        let resolver1_address = signer::address_of(&resolver1);
+        let resolver2_address = signer::address_of(&resolver2);
+
+        // Register both resolvers concurrently (simulated)
+        resolver_registry::register_resolver(&admin, resolver1_address);
+        resolver_registry::register_resolver(&admin, resolver2_address);
+
+        // Verify both are registered
+        assert!(resolver_registry::is_active_resolver(resolver1_address), 0);
+        assert!(resolver_registry::is_active_resolver(resolver2_address), 0);
+
+        // Verify registration timestamps are close
+        let registered_at1 = resolver_registry::get_resolver_registered_at(resolver1_address);
+        let registered_at2 = resolver_registry::get_resolver_registered_at(resolver2_address);
+        assert!(registered_at1 > 0, 0);
+        assert!(registered_at2 > 0, 0);
+    }
+
+    #[test]
+    fun test_resolver_multiple_rapid_operations() {
+        let (admin, resolver, _) = setup_test();
+
+        let resolver_address = signer::address_of(&resolver);
+
+        // Register resolver
+        resolver_registry::register_resolver(&admin, resolver_address);
+        assert!(resolver_registry::is_active_resolver(resolver_address), 0);
+
+        // Perform rapid status changes
+        resolver_registry::deactivate_resolver(&admin, resolver_address);
+        assert!(resolver_registry::is_active_resolver(resolver_address) == false, 0);
+
+        resolver_registry::reactivate_resolver(&admin, resolver_address);
+        assert!(resolver_registry::is_active_resolver(resolver_address), 0);
+
+        resolver_registry::deactivate_resolver(&admin, resolver_address);
+        assert!(resolver_registry::is_active_resolver(resolver_address) == false, 0);
+
+        resolver_registry::reactivate_resolver(&admin, resolver_address);
+        assert!(resolver_registry::is_active_resolver(resolver_address), 0);
+    }
+
+    #[test]
+    fun test_resolver_rapid_status_changes() {
+        let (admin, resolver, _) = setup_test();
+
+        let resolver_address = signer::address_of(&resolver);
+
+        // Register resolver
+        resolver_registry::register_resolver(&admin, resolver_address);
+
+        // Perform rapid status changes with minimal time between
+        let initial_status_change = resolver_registry::get_resolver_last_status_change(resolver_address);
+
+        // Fast forward time before deactivation
+        timestamp::fast_forward_seconds(1);
+
+        // Deactivate
+        resolver_registry::deactivate_resolver(&admin, resolver_address);
+        let status_change1 = resolver_registry::get_resolver_last_status_change(resolver_address);
+        assert!(status_change1 > initial_status_change, 0);
+
+        // Fast forward time before reactivation
+        timestamp::fast_forward_seconds(1);
+
+        // Reactivate immediately
+        resolver_registry::reactivate_resolver(&admin, resolver_address);
+        let status_change2 = resolver_registry::get_resolver_last_status_change(resolver_address);
+        assert!(status_change2 > status_change1, 0);
+
+        // Fast forward time before second deactivation
+        timestamp::fast_forward_seconds(1);
+
+        // Deactivate again
+        resolver_registry::deactivate_resolver(&admin, resolver_address);
+        let status_change3 = resolver_registry::get_resolver_last_status_change(resolver_address);
+        assert!(status_change3 > status_change2, 0);
+    }
+
+    #[test]
+    fun test_resolver_timestamp_edge_cases() {
+        let (admin, resolver, _) = setup_test();
+
+        let resolver_address = signer::address_of(&resolver);
+
+        // Register resolver
+        resolver_registry::register_resolver(&admin, resolver_address);
+
+        // Test timestamp consistency
+        let registered_at = resolver_registry::get_resolver_registered_at(resolver_address);
+        let initial_status_change = resolver_registry::get_resolver_last_status_change(resolver_address);
+
+        assert!(registered_at > 0, 0);
+        assert!(initial_status_change > 0, 0);
+        assert!(initial_status_change == registered_at, 0); // Should be same initially
+
+        // Fast forward time
+        timestamp::fast_forward_seconds(100);
+
+        // Deactivate resolver
+        resolver_registry::deactivate_resolver(&admin, resolver_address);
+
+        let final_status_change = resolver_registry::get_resolver_last_status_change(resolver_address);
+        assert!(final_status_change > initial_status_change, 0);
+        assert!(final_status_change > registered_at, 0);
+    }
+
+    #[test]
+    fun test_resolver_timestamps() {
+        let (admin, resolver, _) = setup_test();
+
+        let resolver_address = signer::address_of(&resolver);
+
+        // Record time before registration
+        let before_registration = timestamp::now_seconds();
+
+        // Register resolver
+        resolver_registry::register_resolver(&admin, resolver_address);
+
+        // Verify registration timestamp
+        let registered_at = resolver_registry::get_resolver_registered_at(resolver_address);
+        assert!(registered_at >= before_registration, 0);
+
+        // Verify initial status change timestamp
+        let initial_status_change = resolver_registry::get_resolver_last_status_change(resolver_address);
+        assert!(initial_status_change == registered_at, 0);
+
+        // Fast forward time
+        timestamp::fast_forward_seconds(50);
+
+        // Deactivate resolver
+        resolver_registry::deactivate_resolver(&admin, resolver_address);
+
+        // Verify status change timestamp updated
+        let final_status_change = resolver_registry::get_resolver_last_status_change(resolver_address);
+        assert!(final_status_change > initial_status_change, 0);
+        assert!(final_status_change > registered_at, 0);
     }
 }
