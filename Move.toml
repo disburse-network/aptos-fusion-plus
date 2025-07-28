@@ -1,0 +1,16 @@
+[package]
+name = "aptos_fusion_plus"
+version = "1.0.0"
+upgrade_policy = "compatible"
+
+[addresses]
+aptos_fusion_plus = "_"
+
+[dev-addresses]
+aptos_fusion_plus = "0x234"
+
+[dependencies]
+AptosFramework = { local = "/Users/mihirsahu/Codes/aptos-core/aptos-move/framework/aptos-framework" }
+
+[dev-dependencies]
+AptosFramework = { local = "/Users/mihirsahu/Codes/aptos-core/aptos-move/framework/aptos-framework" }
