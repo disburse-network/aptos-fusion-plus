@@ -336,7 +336,12 @@ module aptos_fusion_plus::escrow {
             EscrowController { extend_ref, delete_ref }
         );
 
-        let timelock = timelock::new();
+        // Create timelock based on chain type
+        let timelock = if (chain_id == constants::get_source_chain_id()) {
+            timelock::new_source()
+        } else {
+            timelock::new_destination()
+        };
         let hashlock = hashlock::create_hashlock(hash);
 
         let metadata = fungible_asset::metadata_from_asset(&asset);
@@ -434,7 +439,11 @@ module aptos_fusion_plus::escrow {
         assert!(escrow_ref.resolver == signer_address, EINVALID_CALLER);
 
         let timelock = escrow_ref.timelock;
-        assert!(timelock::is_in_exclusive_phase(&timelock), EINVALID_PHASE);
+        // Check if withdrawal is allowed (not in finality lock and in withdrawal phase)
+        assert!(
+            timelock::is_withdrawal_allowed(&timelock), 
+            EINVALID_PHASE
+        );
 
         // Verify the secret matches the hashlock
         // CROSS-CHAIN LOGIC: Same secret must work on both chains
@@ -517,11 +526,21 @@ module aptos_fusion_plus::escrow {
         let escrow_ref = borrow_escrow_mut(&escrow);
         let timelock = escrow_ref.timelock;
 
-        if (timelock::is_in_private_cancellation_phase(&timelock)) {
-            assert!(escrow_ref.resolver == signer_address, EINVALID_CALLER);
+        // Check if cancellation is allowed (not in finality lock and in cancellation phase)
+        assert!(
+            timelock::is_cancellation_allowed(&timelock), 
+            EINVALID_PHASE
+        );
+
+        // Check if we're in private cancellation phase (only resolver can cancel)
+        if (timelock::is_in_cancellation_phase(&timelock)) {
+            // Private cancellation: only resolver can cancel
+            assert!(signer_address == escrow_ref.resolver, EINVALID_CALLER);
         } else {
+            // Public cancellation: anyone can cancel (no caller validation needed)
             assert!(
-                timelock::is_in_public_cancellation_phase(&timelock), EINVALID_PHASE
+                timelock::is_in_public_cancellation_phase(&timelock), 
+                EINVALID_PHASE
             );
         };
 
@@ -553,10 +572,6 @@ module aptos_fusion_plus::escrow {
         object::delete(delete_ref);
 
         // Emit recovery event for cross-chain coordination
-        // RESOLVER SHOULD MONITOR THIS EVENT:
-        // - Handle cancellation scenarios
-        // - Cancel corresponding escrow on other chain
-        // - Ensure proper cleanup across chains
         event::emit(
             EscrowRecoveredEvent { escrow, recovered_by, returned_to, metadata, amount }
         );
@@ -670,7 +685,7 @@ module aptos_fusion_plus::escrow {
     ///
     /// @param escrow_obj The escrow object.
     /// @return &Escrow Immutable reference to the escrow.
-    inline fun borrow_escrow(escrow_obj: &Object<Escrow>): &Escrow acquires Escrow {
+    inline fun borrow_escrow(escrow_obj: &Object<Escrow>): &Escrow {
         borrow_global<Escrow>(object::object_address(escrow_obj))
     }
 
@@ -678,7 +693,7 @@ module aptos_fusion_plus::escrow {
     ///
     /// @param escrow_obj The escrow object.
     /// @return &mut Escrow Mutable reference to the escrow.
-    inline fun borrow_escrow_mut(escrow_obj: &Object<Escrow>): &mut Escrow acquires Escrow {
+    inline fun borrow_escrow_mut(escrow_obj: &Object<Escrow>): &mut Escrow {
         borrow_global_mut<Escrow>(object::object_address(escrow_obj))
     }
 
@@ -688,7 +703,7 @@ module aptos_fusion_plus::escrow {
     /// @return &EscrowController Immutable reference to the controller.
     inline fun borrow_escrow_controller(
         escrow_obj: &Object<Escrow>
-    ): &EscrowController acquires EscrowController {
+    ): &EscrowController {
         borrow_global<EscrowController>(object::object_address(escrow_obj))
     }
 
@@ -698,7 +713,7 @@ module aptos_fusion_plus::escrow {
     /// @return &mut EscrowController Mutable reference to the controller.
     inline fun borrow_escrow_controller_mut(
         escrow_obj: &Object<Escrow>
-    ): &mut EscrowController acquires EscrowController {
+    ): &mut EscrowController {
         borrow_global_mut<EscrowController>(object::object_address(escrow_obj))
     }
 }
