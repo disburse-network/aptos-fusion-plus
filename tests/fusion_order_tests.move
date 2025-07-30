@@ -79,7 +79,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         // Verify initial state
@@ -135,7 +138,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -173,7 +179,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         // Wrong caller tries to cancel the order
@@ -195,7 +204,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         let fusion_order2 =
@@ -207,7 +219,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT * 2,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(WRONG_SECRET)
+                hash::sha3_256(WRONG_SECRET),
+                DESTINATION_AMOUNT * 2,
+                DESTINATION_AMOUNT * 2,
+                20
             );
 
         // Note: No safety deposit verification since user doesn't provide safety deposit
@@ -242,7 +257,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         let fusion_order2 =
@@ -254,7 +272,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT * 2,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(WRONG_SECRET)
+                hash::sha3_256(WRONG_SECRET),
+                DESTINATION_AMOUNT * 2,
+                DESTINATION_AMOUNT * 2,
+                20
             );
 
         // Each owner cancels their own order
@@ -293,7 +314,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         // Owner cancels the order
@@ -318,7 +342,10 @@ module aptos_fusion_plus::fusion_order_tests {
             DESTINATION_AMOUNT,
             DESTINATION_RECIPIENT,
             CHAIN_ID,
-            hash::sha3_256(TEST_SECRET)
+            hash::sha3_256(TEST_SECRET),
+            DESTINATION_AMOUNT,
+            DESTINATION_AMOUNT,
+            20
         );
     }
 
@@ -335,7 +362,10 @@ module aptos_fusion_plus::fusion_order_tests {
             DESTINATION_AMOUNT,
             DESTINATION_RECIPIENT,
             CHAIN_ID,
-            vector::empty() // Empty hash should fail
+            vector::empty(), // Empty hash should fail
+            DESTINATION_AMOUNT,
+            DESTINATION_AMOUNT,
+            20
         );
     }
 
@@ -354,7 +384,10 @@ module aptos_fusion_plus::fusion_order_tests {
             DESTINATION_AMOUNT,
             DESTINATION_RECIPIENT,
             CHAIN_ID,
-            hash::sha3_256(TEST_SECRET)
+            hash::sha3_256(TEST_SECRET),
+            DESTINATION_AMOUNT,
+            DESTINATION_AMOUNT,
+            20
         );
     }
 
@@ -372,7 +405,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         // Create a different account that's not the resolver
@@ -404,7 +440,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -436,7 +475,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         // Test is_valid_hash
@@ -478,7 +520,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                large_hash
+                large_hash,
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         // Verify the hash is stored correctly
@@ -516,7 +561,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         // First resolver accepts the order (provides safety deposit)
@@ -547,7 +595,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT * 2,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(WRONG_SECRET)
+                hash::sha3_256(WRONG_SECRET),
+                DESTINATION_AMOUNT * 2,
+                DESTINATION_AMOUNT * 2,
+                20
             );
 
         // For the second resolver, we'll just verify the order exists
@@ -574,7 +625,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -607,7 +661,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -661,7 +718,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -727,7 +787,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -783,7 +846,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         // Verify NO safety deposit was transferred (user doesn't provide safety deposit)
@@ -818,7 +884,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 different_chain_id,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         // Resolver should be able to accept order with different chain ID
@@ -852,7 +921,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         assert!(fusion_order::get_source_amount(min_fusion_order) == 1, 0);
@@ -869,7 +941,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         assert!(fusion_order::get_source_amount(max_fusion_order) == max_amount, 0);
@@ -897,7 +972,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                min_hash
+                min_hash,
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         assert!(fusion_order::get_hash(min_hash_order) == min_hash, 0);
@@ -920,7 +998,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                max_hash
+                max_hash,
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         assert!(fusion_order::get_hash(max_hash_order) == max_hash, 0);
@@ -942,7 +1023,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 min_chain_id,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         assert!(fusion_order::get_chain_id(min_chain_order) == min_chain_id, 0);
@@ -959,7 +1043,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 max_chain_id,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         assert!(fusion_order::get_chain_id(max_chain_order) == max_chain_id, 0);
@@ -983,7 +1070,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         // Create a resolver without safety deposit tokens
@@ -1039,7 +1129,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(TEST_SECRET)
+                hash::sha3_256(TEST_SECRET),
+                DESTINATION_AMOUNT,
+                DESTINATION_AMOUNT,
+                20
             );
 
         // First resolver accepts the order
@@ -1070,7 +1163,10 @@ module aptos_fusion_plus::fusion_order_tests {
                 DESTINATION_AMOUNT * 2,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
-                hash::sha3_256(WRONG_SECRET)
+                hash::sha3_256(WRONG_SECRET),
+                DESTINATION_AMOUNT * 2,
+                DESTINATION_AMOUNT * 2,
+                20
             );
 
         // Ensure second resolver has enough tokens for the larger order
@@ -1084,5 +1180,59 @@ module aptos_fusion_plus::fusion_order_tests {
 
         // Cancel the second order instead of accepting it
         fusion_order::cancel(&owner, fusion_order2);
+    }
+
+    #[test]
+    fun test_dutch_auction_price_calculation() {
+        let (owner, _, _, metadata, _, _, _) = setup_test();
+
+        // Set initial time
+        timestamp::set_time_has_started_for_testing(
+            &account::create_signer_for_test(@aptos_framework)
+        );
+        let start_time = timestamp::now_seconds();
+
+        // Create Dutch auction with: initial=100200, min=100000, decay=20 per second
+        let fusion_order = fusion_order::new(
+            &owner,
+            metadata,
+            ASSET_AMOUNT,
+            DESTINATION_ASSET,
+            DESTINATION_AMOUNT,
+            DESTINATION_RECIPIENT,
+            CHAIN_ID,
+            hash::sha3_256(TEST_SECRET),
+            100200, // initial_destination_amount
+            100000, // min_destination_amount
+            20      // decay_per_second
+        );
+
+        // Test initial price (should be initial amount)
+        let current_price = fusion_order::get_current_dutch_auction_price(fusion_order);
+        assert!(current_price == 100200, 0);
+
+        // Fast forward 5 seconds
+        timestamp::update_global_time_for_test_secs(start_time + 5);
+        
+        // Price should be: 100200 - (20 * 5) = 100100
+        let current_price_after_5_sec = fusion_order::get_current_dutch_auction_price(fusion_order);
+        assert!(current_price_after_5_sec == 100100, 0);
+
+        // Fast forward 10 seconds total
+        timestamp::update_global_time_for_test_secs(start_time + 10);
+        
+        // Price should be: 100200 - (20 * 10) = 100000 (at minimum)
+        let current_price_after_10_sec = fusion_order::get_current_dutch_auction_price(fusion_order);
+        assert!(current_price_after_10_sec == 100000, 0);
+
+        // Fast forward 15 seconds total (should still be at minimum)
+        timestamp::update_global_time_for_test_secs(start_time + 15);
+        
+        // Price should still be at minimum: 100000
+        let current_price_after_15_sec = fusion_order::get_current_dutch_auction_price(fusion_order);
+        assert!(current_price_after_15_sec == 100000, 0);
+
+        // Clean up
+        fusion_order::cancel(&owner, fusion_order);
     }
 }

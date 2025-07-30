@@ -22,6 +22,9 @@ module aptos_fusion_plus::simple_test {
     const EVM_CONTRACT_ADDRESS: vector<u8> = b"12345678901234567890"; // 20 bytes
     const DESTINATION_RECIPIENT: vector<u8> = b"12345678901234567890"; // 20 bytes
     const TEST_SECRET: vector<u8> = b"my secret";
+    const INITIAL_DESTINATION_AMOUNT: u64 = 100200;
+    const MIN_DESTINATION_AMOUNT: u64 = 100000;
+    const DECAY_PER_SECOND: u64 = 20;
 
     #[test]
     fun test_new_fusion_order_functionality() {
@@ -47,7 +50,10 @@ module aptos_fusion_plus::simple_test {
             DESTINATION_AMOUNT,
             DESTINATION_RECIPIENT,
             CHAIN_ID,
-            hash::sha3_256(TEST_SECRET)
+            hash::sha3_256(TEST_SECRET),
+            INITIAL_DESTINATION_AMOUNT,
+            MIN_DESTINATION_AMOUNT,
+            DECAY_PER_SECOND
         );
 
         // Verify the new fields work correctly

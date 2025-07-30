@@ -76,7 +76,10 @@ module aptos_fusion_plus::escrow_tests {
             amount,                  // Default destination amount same as source
             DESTINATION_RECIPIENT,   // Default recipient
             chain_id,
-            hash
+            hash,
+            100200,
+            100000,
+            20
         )
     }
 

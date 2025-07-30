@@ -4,6 +4,7 @@ module aptos_fusion_plus::fusion_order {
     use aptos_framework::fungible_asset::{FungibleAsset, Metadata};
     use aptos_framework::object::{Self, Object, ExtendRef, DeleteRef, ObjectGroup};
     use aptos_framework::primary_fungible_store;
+    use aptos_framework::timestamp;
 
     use aptos_fusion_plus::constants;
     use aptos_fusion_plus::resolver_registry;
@@ -51,7 +52,12 @@ module aptos_fusion_plus::fusion_order {
         destination_asset: vector<u8>,      // Destination asset (EVM address or native)
         destination_amount: u64,            // Amount they expect to receive
         destination_recipient: vector<u8>,  // EVM address to receive destination assets
-        chain_id: u64                      // Destination chain ID
+        chain_id: u64,                      // Destination chain ID
+        initial_destination_amount: u64,
+        min_destination_amount: u64,
+        decay_per_second: u64,
+        auction_start_time: u64,
+        current_price: u64                  // Current Dutch auction price at creation time
     }
 
     #[event]
@@ -94,7 +100,12 @@ module aptos_fusion_plus::fusion_order {
         destination_asset: vector<u8>,      // Destination asset (EVM address or native)
         destination_amount: u64,            // Destination amount
         destination_recipient: vector<u8>,  // EVM address to receive destination assets
-        chain_id: u64                      // Destination chain ID
+        chain_id: u64,                      // Destination chain ID
+        initial_destination_amount: u64,
+        min_destination_amount: u64,
+        decay_per_second: u64,
+        auction_start_time: u64,
+        current_price: u64
     }
 
     // - - - - STRUCTS - - - -
@@ -133,6 +144,10 @@ module aptos_fusion_plus::fusion_order {
     /// @param safety_deposit_amount The amount of safety deposit (always 0 for user orders).
     /// @param chain_id The destination chain ID for the swap.
     /// @param hash The hash of the secret for the cross-chain swap.
+    /// @param initial_destination_amount The starting price of the Dutch auction.
+    /// @param min_destination_amount The minimum price of the Dutch auction.
+    /// @param decay_per_second The price decay per second of the Dutch auction.
+    /// @param auction_start_time The timestamp when the Dutch auction starts.
     struct FusionOrder has key, store {
         owner: address,
         source_metadata: Object<Metadata>,
@@ -143,7 +158,12 @@ module aptos_fusion_plus::fusion_order {
         safety_deposit_metadata: Object<Metadata>,
         safety_deposit_amount: u64, // Always 0 - resolver provides safety deposit
         chain_id: u64,
-        hash: vector<u8>
+        hash: vector<u8>,
+        /// Dutch auction fields
+        initial_destination_amount: u64, // Starting price (e.g., 100200 USDC)
+        min_destination_amount: u64,     // Minimum price (floor)
+        decay_per_second: u64,           // Price decay per second
+        auction_start_time: u64,         // Timestamp when auction starts
     }
 
     // - - - - ENTRY FUNCTIONS - - - -
@@ -157,9 +177,12 @@ module aptos_fusion_plus::fusion_order {
         destination_amount: u64,
         destination_recipient: vector<u8>,
         chain_id: u64,
-        hash: vector<u8>
+        hash: vector<u8>,
+        initial_destination_amount: u64,
+        min_destination_amount: u64,
+        decay_per_second: u64
     ) {
-        new(signer, source_metadata, source_amount, destination_asset, destination_amount, destination_recipient, chain_id, hash);
+        new(signer, source_metadata, source_amount, destination_asset, destination_amount, destination_recipient, chain_id, hash, initial_destination_amount, min_destination_amount, decay_per_second);
     }
 
     // - - - - PUBLIC FUNCTIONS - - - -
@@ -190,6 +213,9 @@ module aptos_fusion_plus::fusion_order {
     ///                              - This is the address on the destination chain (EVM format)
     /// @param chain_id The destination chain ID for the swap.
     /// @param hash The hash of the secret for the cross-chain swap.
+    /// @param initial_destination_amount The starting price of the Dutch auction.
+    /// @param min_destination_amount The minimum price of the Dutch auction.
+    /// @param decay_per_second The price decay per second of the Dutch auction.
     ///
     /// @reverts EINVALID_AMOUNT if amount is zero.
     /// @reverts EINSUFFICIENT_BALANCE if user has insufficient balance for source asset.
@@ -202,7 +228,10 @@ module aptos_fusion_plus::fusion_order {
         destination_amount: u64,
         destination_recipient: vector<u8>,
         chain_id: u64,
-        hash: vector<u8>
+        hash: vector<u8>,
+        initial_destination_amount: u64,
+        min_destination_amount: u64,
+        decay_per_second: u64
     ): Object<FusionOrder> {
 
         let signer_address = signer::address_of(signer);
@@ -230,6 +259,10 @@ module aptos_fusion_plus::fusion_order {
             EINVALID_AMOUNT
         );
 
+        // Validate Dutch auction parameters
+        assert!(initial_destination_amount >= min_destination_amount, EINVALID_AMOUNT);
+        assert!(decay_per_second > 0, EINVALID_AMOUNT);
+
         // Create an object and FusionOrder
         let constructor_ref = object::create_object_from_account(signer);
         let object_signer = object::generate_signer(&constructor_ref);
@@ -254,9 +287,24 @@ module aptos_fusion_plus::fusion_order {
             safety_deposit_metadata: constants::get_safety_deposit_metadata(),
             safety_deposit_amount: 0, // User doesn't provide safety deposit
             chain_id,
-            hash
+            hash,
+            /// Dutch auction fields
+            initial_destination_amount, // Starting price (e.g., 100200 USDC)
+            min_destination_amount,     // Minimum price (floor)
+            decay_per_second,           // Price decay per second
+            auction_start_time: timestamp::now_seconds(),         // Timestamp when auction starts
         };
 
+        let initial_destination_amount_val = fusion_order.initial_destination_amount;
+        let min_destination_amount_val = fusion_order.min_destination_amount;
+        let decay_per_second_val = fusion_order.decay_per_second;
+        let auction_start_time_val = fusion_order.auction_start_time;
+        let current_price_val = calculate_current_dutch_auction_price(
+            initial_destination_amount_val,
+            min_destination_amount_val,
+            decay_per_second_val,
+            auction_start_time_val
+        );
         move_to(&object_signer, fusion_order);
 
         let object_address = signer::address_of(&object_signer);
@@ -278,7 +326,12 @@ module aptos_fusion_plus::fusion_order {
                 destination_asset,
                 destination_amount,
                 destination_recipient,
-                chain_id
+                chain_id,
+                initial_destination_amount: initial_destination_amount_val,
+                min_destination_amount: min_destination_amount_val,
+                decay_per_second: decay_per_second_val,
+                auction_start_time: auction_start_time_val,
+                current_price: current_price_val
             }
         );
 
@@ -391,6 +444,10 @@ module aptos_fusion_plus::fusion_order {
         let destination_amount = fusion_order_ref.destination_amount;
         let destination_recipient = fusion_order_ref.destination_recipient;
         let chain_id = fusion_order_ref.chain_id;
+        let initial_destination_amount = fusion_order_ref.initial_destination_amount;
+        let min_destination_amount = fusion_order_ref.min_destination_amount;
+        let decay_per_second = fusion_order_ref.decay_per_second;
+        let auction_start_time = fusion_order_ref.auction_start_time;
 
         let FusionOrderController { extend_ref, delete_ref } = move_from(object_address);
 
@@ -421,6 +478,12 @@ module aptos_fusion_plus::fusion_order {
         // - Track that order has been accepted
         // - Use metadata, amount, chain_id to create destination escrow
         // - Ensure matching parameters across both chains
+        let current_price = calculate_current_dutch_auction_price(
+            initial_destination_amount,
+            min_destination_amount,
+            decay_per_second,
+            auction_start_time
+        );
         event::emit(
             FusionOrderAcceptedEvent {
                 fusion_order,
@@ -431,7 +494,12 @@ module aptos_fusion_plus::fusion_order {
                 destination_asset,
                 destination_amount,
                 destination_recipient,
-                chain_id
+                chain_id,
+                initial_destination_amount,
+                min_destination_amount,
+                decay_per_second,
+                auction_start_time,
+                current_price
             }
         );
 
@@ -535,6 +603,42 @@ module aptos_fusion_plus::fusion_order {
         fusion_order_ref.safety_deposit_amount // Always 0 since user doesn't provide safety deposit
     }
 
+    /// Gets the initial destination amount of a fusion order.
+    ///
+    /// @param fusion_order The fusion order to get the initial destination amount from.
+    /// @return u64 The initial destination amount.
+    public fun get_initial_destination_amount(fusion_order: Object<FusionOrder>): u64 acquires FusionOrder {
+        let fusion_order_ref = borrow_fusion_order(&fusion_order);
+        fusion_order_ref.initial_destination_amount
+    }
+
+    /// Gets the minimum destination amount of a fusion order.
+    ///
+    /// @param fusion_order The fusion order to get the minimum destination amount from.
+    /// @return u64 The minimum destination amount.
+    public fun get_min_destination_amount(fusion_order: Object<FusionOrder>): u64 acquires FusionOrder {
+        let fusion_order_ref = borrow_fusion_order(&fusion_order);
+        fusion_order_ref.min_destination_amount
+    }
+
+    /// Gets the decay per second of a fusion order.
+    ///
+    /// @param fusion_order The fusion order to get the decay per second from.
+    /// @return u64 The decay per second.
+    public fun get_decay_per_second(fusion_order: Object<FusionOrder>): u64 acquires FusionOrder {
+        let fusion_order_ref = borrow_fusion_order(&fusion_order);
+        fusion_order_ref.decay_per_second
+    }
+
+    /// Gets the auction start time of a fusion order.
+    ///
+    /// @param fusion_order The fusion order to get the auction start time from.
+    /// @return u64 The auction start time.
+    public fun get_auction_start_time(fusion_order: Object<FusionOrder>): u64 acquires FusionOrder {
+        let fusion_order_ref = borrow_fusion_order(&fusion_order);
+        fusion_order_ref.auction_start_time
+    }
+
     /// Gets the destination chain ID of a fusion order.
     ///
     /// @param fusion_order The fusion order to get the chain ID from.
@@ -616,6 +720,53 @@ module aptos_fusion_plus::fusion_order {
     ): bool acquires FusionOrder {
         let fusion_order_ref = borrow_fusion_order(&fusion_order);
         fusion_order_ref.owner == address
+    }
+
+    /// Calculates the current Dutch auction price based on elapsed time.
+    /// Formula: current_price = max(min_price, initial_price - decay_rate * elapsed_seconds)
+    ///
+    /// @param initial_destination_amount The initial price of the Dutch auction.
+    /// @param min_destination_amount The minimum price (floor) of the Dutch auction.
+    /// @param decay_per_second The price decay per second.
+    /// @param auction_start_time The timestamp when the auction started.
+    /// @return u64 The current price at the given time.
+    public fun calculate_current_dutch_auction_price(
+        initial_destination_amount: u64,
+        min_destination_amount: u64,
+        decay_per_second: u64,
+        auction_start_time: u64
+    ): u64 {
+        let current_time = timestamp::now_seconds();
+        let elapsed_seconds = current_time - auction_start_time;
+        let total_decay = decay_per_second * elapsed_seconds;
+        
+        if (total_decay >= initial_destination_amount) {
+            // Price has decayed to or below minimum
+            min_destination_amount
+        } else {
+            let current_price = initial_destination_amount - total_decay;
+            if (current_price < min_destination_amount) {
+                min_destination_amount
+            } else {
+                current_price
+            }
+        }
+    }
+
+    /// Gets the current Dutch auction price for a fusion order.
+    ///
+    /// @param fusion_order The fusion order to get the current price for.
+    /// @return u64 The current price at the current time.
+    public fun get_current_dutch_auction_price(
+        fusion_order: Object<FusionOrder>
+    ): u64 acquires FusionOrder {
+        let fusion_order_ref = borrow_fusion_order(&fusion_order);
+        calculate_current_dutch_auction_price(
+            fusion_order_ref.initial_destination_amount,
+            fusion_order_ref.min_destination_amount,
+            fusion_order_ref.decay_per_second,
+            fusion_order_ref.auction_start_time
+        )
     }
 
     // - - - - BORROW FUNCTIONS - - - -
