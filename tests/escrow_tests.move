@@ -27,6 +27,13 @@ module aptos_fusion_plus::escrow_tests {
     const TEST_SECRET: vector<u8> = b"my secret";
     const WRONG_SECRET: vector<u8> = b"wrong secret";
 
+    // Test destination parameters
+    const DESTINATION_AMOUNT: u64 = 500000;
+    const NATIVE_ASSET: vector<u8> = b"";
+    // Use a real 20-byte EVM address for all tests
+    const EVM_CONTRACT_ADDRESS: vector<u8> = b"\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11"; // 20 bytes
+    const DESTINATION_RECIPIENT: vector<u8> = b"\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11"; // 20 bytes
+
     fun setup_test(): (signer, signer, signer, Object<Metadata>, MintRef) {
         timestamp::set_time_has_started_for_testing(
             &account::create_signer_for_test(@aptos_framework)
@@ -54,13 +61,32 @@ module aptos_fusion_plus::escrow_tests {
         (account_1, account_2, resolver, metadata, mint_ref)
     }
 
+    fun create_fusion_order_with_defaults(
+        signer: &signer,
+        metadata: Object<Metadata>,
+        amount: u64,
+        chain_id: u64,
+        hash: vector<u8>
+    ): Object<FusionOrder> {
+        fusion_order::new(
+            signer,
+            metadata,
+            amount,
+            NATIVE_ASSET,           // Default to native asset
+            amount,                  // Default destination amount same as source
+            DESTINATION_RECIPIENT,   // Default recipient
+            chain_id,
+            hash
+        )
+    }
+
     #[test]
     fun test_create_escrow_from_order() {
         let (owner, _, resolver, metadata, _) = setup_test();
 
         // Create a fusion order first
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -185,7 +211,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create multiple fusion orders
         let fusion_order1 =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -194,7 +220,7 @@ module aptos_fusion_plus::escrow_tests {
             );
 
         let fusion_order2 =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT * 2,
@@ -413,7 +439,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create fusion order
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -449,7 +475,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create fusion order (source chain scenario)
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -507,7 +533,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create fusion order (source chain scenario)
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -535,7 +561,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create fusion order (source chain scenario)
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -563,7 +589,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create fusion order (source chain scenario)
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -707,7 +733,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create escrow from fusion order
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -817,7 +843,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create escrow from fusion order
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -843,7 +869,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create escrow from fusion order
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -877,7 +903,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Test is_source_chain for source chain scenario
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &resolver,
                 metadata,
                 ASSET_AMOUNT,
@@ -911,7 +937,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create escrow from fusion order
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -956,7 +982,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create escrow from fusion order
         let fusion_order =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -974,7 +1000,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create new escrow for next test
         let fusion_order2 =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -992,7 +1018,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create new escrow for next test
         let fusion_order3 =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -1130,7 +1156,7 @@ module aptos_fusion_plus::escrow_tests {
 
         // Create multiple escrows to test object lifecycle
         let fusion_order1 =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
@@ -1140,7 +1166,7 @@ module aptos_fusion_plus::escrow_tests {
         let escrow1 = escrow::new_from_order(&resolver, fusion_order1);
 
         let fusion_order2 =
-            fusion_order::new(
+            create_fusion_order_with_defaults(
                 &owner,
                 metadata,
                 ASSET_AMOUNT * 2,

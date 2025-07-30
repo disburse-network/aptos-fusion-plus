@@ -21,6 +21,11 @@ module aptos_fusion_plus::fusion_order_tests {
     const MINT_AMOUNT: u64 = 100000000; // 100 token
     const ASSET_AMOUNT: u64 = 1000000; // 1 token
 
+    // Add these constants at the top for destination asset/recipient
+    const DESTINATION_AMOUNT: u64 = 1000000;
+    const DESTINATION_ASSET: vector<u8> = b"\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11";
+    const DESTINATION_RECIPIENT: vector<u8> = b"\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22";
+
     // Test secrets and hashes
     const TEST_SECRET: vector<u8> = b"my secret";
     const WRONG_SECRET: vector<u8> = b"wrong secret";
@@ -70,6 +75,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &account_1,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -78,8 +86,8 @@ module aptos_fusion_plus::fusion_order_tests {
         assert!(
             fusion_order::get_owner(fusion_order) == signer::address_of(&account_1), 0
         );
-        assert!(fusion_order::get_metadata(fusion_order) == metadata, 0);
-        assert!(fusion_order::get_amount(fusion_order) == ASSET_AMOUNT, 0);
+        assert!(fusion_order::get_source_metadata(fusion_order) == metadata, 0);
+        assert!(fusion_order::get_source_amount(fusion_order) == ASSET_AMOUNT, 0);
         assert!(fusion_order::get_chain_id(fusion_order) == CHAIN_ID, 0);
         assert!(fusion_order::get_hash(fusion_order) == hash::sha3_256(TEST_SECRET), 0);
 
@@ -123,6 +131,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -158,6 +169,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -177,6 +191,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -186,6 +203,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT * 2,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT * 2,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(WRONG_SECRET)
             );
@@ -218,6 +238,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner1,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -227,6 +250,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner2,
                 metadata,
                 ASSET_AMOUNT * 2,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT * 2,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(WRONG_SECRET)
             );
@@ -263,6 +289,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 large_amount,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -285,6 +314,9 @@ module aptos_fusion_plus::fusion_order_tests {
             &owner,
             metadata,
             0, // Zero amount should fail
+            DESTINATION_ASSET,
+            DESTINATION_AMOUNT,
+            DESTINATION_RECIPIENT,
             CHAIN_ID,
             hash::sha3_256(TEST_SECRET)
         );
@@ -299,6 +331,9 @@ module aptos_fusion_plus::fusion_order_tests {
             &owner,
             metadata,
             ASSET_AMOUNT,
+            DESTINATION_ASSET,
+            DESTINATION_AMOUNT,
+            DESTINATION_RECIPIENT,
             CHAIN_ID,
             vector::empty() // Empty hash should fail
         );
@@ -315,6 +350,9 @@ module aptos_fusion_plus::fusion_order_tests {
             &owner,
             metadata,
             insufficient_amount,
+            DESTINATION_ASSET,
+            DESTINATION_AMOUNT,
+            DESTINATION_RECIPIENT,
             CHAIN_ID,
             hash::sha3_256(TEST_SECRET)
         );
@@ -330,6 +368,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -359,6 +400,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &resolver,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -388,6 +432,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -427,6 +474,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 large_hash
             );
@@ -462,6 +512,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -490,6 +543,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT * 2,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT * 2,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(WRONG_SECRET)
             );
@@ -498,7 +554,7 @@ module aptos_fusion_plus::fusion_order_tests {
         // and that it can be cancelled (avoiding the safety deposit complexity)
         assert!(fusion_order::order_exists(fusion_order2), 0);
         assert!(fusion_order::get_owner(fusion_order2) == signer::address_of(&owner), 0);
-        assert!(fusion_order::get_amount(fusion_order2) == ASSET_AMOUNT * 2, 0);
+        assert!(fusion_order::get_source_amount(fusion_order2) == ASSET_AMOUNT * 2, 0);
 
         // Cancel the second order instead of accepting it
         fusion_order::cancel(&owner, fusion_order2);
@@ -514,6 +570,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -544,6 +603,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -595,6 +657,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -658,6 +723,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -711,6 +779,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -743,6 +814,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 different_chain_id,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -774,11 +848,14 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 1,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
 
-        assert!(fusion_order::get_amount(min_fusion_order) == 1, 0);
+        assert!(fusion_order::get_source_amount(min_fusion_order) == 1, 0);
         fusion_order::cancel(&owner, min_fusion_order);
 
         // Test maximum reasonable amount (use a smaller amount to avoid balance issues)
@@ -788,11 +865,14 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 max_amount,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
 
-        assert!(fusion_order::get_amount(max_fusion_order) == max_amount, 0);
+        assert!(fusion_order::get_source_amount(max_fusion_order) == max_amount, 0);
         fusion_order::cancel(&owner, max_fusion_order);
     }
 
@@ -813,6 +893,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 min_hash
             );
@@ -833,6 +916,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 max_hash
             );
@@ -852,6 +938,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 min_chain_id,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -866,6 +955,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 max_chain_id,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -887,6 +979,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -940,6 +1035,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET)
             );
@@ -968,6 +1066,9 @@ module aptos_fusion_plus::fusion_order_tests {
                 &owner,
                 metadata,
                 ASSET_AMOUNT * 2,
+                DESTINATION_ASSET,
+                DESTINATION_AMOUNT * 2,
+                DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(WRONG_SECRET)
             );
@@ -979,7 +1080,7 @@ module aptos_fusion_plus::fusion_order_tests {
         // and that it can be cancelled (avoiding the safety deposit complexity)
         assert!(fusion_order::order_exists(fusion_order2), 0);
         assert!(fusion_order::get_owner(fusion_order2) == signer::address_of(&owner), 0);
-        assert!(fusion_order::get_amount(fusion_order2) == ASSET_AMOUNT * 2, 0);
+        assert!(fusion_order::get_source_amount(fusion_order2) == ASSET_AMOUNT * 2, 0);
 
         // Cancel the second order instead of accepting it
         fusion_order::cancel(&owner, fusion_order2);
