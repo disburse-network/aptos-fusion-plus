@@ -9,15 +9,17 @@ module aptos_fusion_plus::constants {
     const DEFAULT_SAFETY_DEPOSIT_AMOUNT: u64 = 100_000;
 
     // Source Chain Timelocks (matching 1inch Fusion+ EVM)
-    const SRC_WITHDRAWAL: u64 = 10; // 10sec finality lock for test
-    const SRC_PUBLIC_WITHDRAWAL: u64 = 120; // 2m for private withdrawal
-    const SRC_CANCELLATION: u64 = 121; // 1sec public withdrawal
-    const SRC_PUBLIC_CANCELLATION: u64 = 122; // 1sec private cancellation
+    const SRC_FINALITY_LOCK: u64 = 12;      // 12sec finality lock (no actions allowed)
+    const SRC_WITHDRAWAL: u64 = 24;         // 12sec exclusive withdrawal (24-12=12sec)
+    const SRC_PUBLIC_WITHDRAWAL: u64 = 120; // 96sec public withdrawal (120-24=96sec) 
+    const SRC_CANCELLATION: u64 = 180;      // 60sec resolver cancellation (180-120=60sec)
+    const SRC_PUBLIC_CANCELLATION: u64 = 240; // 60sec public cancellation (240-180=60sec)
 
-    // Destination Chain Timelocks (matching 1inch Fusion+ EVM)
-    const DST_WITHDRAWAL: u64 = 10; // 10sec finality lock for test
-    const DST_PUBLIC_WITHDRAWAL: u64 = 100; // 100sec private withdrawal
-    const DST_CANCELLATION: u64 = 101; // 1sec public withdrawal
+    // Destination Chain Timelocks (shorter for resolver protection)
+    const DST_FINALITY_LOCK: u64 = 12;      // 12sec finality lock (no actions allowed)
+    const DST_WITHDRAWAL: u64 = 24;         // 12sec exclusive withdrawal (24-12=12sec)
+    const DST_PUBLIC_WITHDRAWAL: u64 = 100; // 76sec public withdrawal (100-24=76sec)
+    const DST_CANCELLATION: u64 = 160;      // 60sec resolver cancellation (160-100=60sec)
 
     // Chain IDs
     const SOURCE_CHAIN_ID: u64 = 1; // Aptos chain ID
@@ -31,6 +33,10 @@ module aptos_fusion_plus::constants {
     }
 
     // Source Chain Timelock Functions
+    public fun get_src_finality_lock(): u64 {
+        SRC_FINALITY_LOCK
+    }
+
     public fun get_src_withdrawal(): u64 {
         SRC_WITHDRAWAL
     }
@@ -48,6 +54,10 @@ module aptos_fusion_plus::constants {
     }
 
     // Destination Chain Timelock Functions
+    public fun get_dst_finality_lock(): u64 {
+        DST_FINALITY_LOCK
+    }
+
     public fun get_dst_withdrawal(): u64 {
         DST_WITHDRAWAL
     }

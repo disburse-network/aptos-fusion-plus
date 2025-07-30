@@ -12,15 +12,17 @@ module aptos_fusion_plus::timelock {
     const CHAIN_TYPE_DESTINATION: u8 = 1;
 
     /// Phase constants for Source Chain
-    const SRC_PHASE_WITHDRAWAL: u8 = 0; // 0-10s: Only withdrawal with secret
-    const SRC_PHASE_PUBLIC_WITHDRAWAL: u8 = 1; // 10-120s: Public withdrawal with secret
-    const SRC_PHASE_CANCELLATION: u8 = 2; // 120-121s: Cancellation by owner
-    const SRC_PHASE_PUBLIC_CANCELLATION: u8 = 3; // 121-122s: Public cancellation
+    const SRC_PHASE_FINALITY_LOCK: u8 = 0;         // 0-12s: Finality lock (no actions)
+    const SRC_PHASE_WITHDRAWAL: u8 = 1;            // 12-24s: Exclusive withdrawal
+    const SRC_PHASE_PUBLIC_WITHDRAWAL: u8 = 2;     // 24-120s: Public withdrawal
+    const SRC_PHASE_CANCELLATION: u8 = 3;          // 120-180s: Resolver cancellation
+    const SRC_PHASE_PUBLIC_CANCELLATION: u8 = 4;   // 180-240s: Public cancellation
 
     /// Phase constants for Destination Chain
-    const DST_PHASE_WITHDRAWAL: u8 = 0; // 0-10s: Only withdrawal with secret
-    const DST_PHASE_PUBLIC_WITHDRAWAL: u8 = 1; // 10-100s: Public withdrawal with secret
-    const DST_PHASE_CANCELLATION: u8 = 2; // 100-101s: Cancellation by owner
+    const DST_PHASE_FINALITY_LOCK: u8 = 0;         // 0-12s: Finality lock (no actions)
+    const DST_PHASE_WITHDRAWAL: u8 = 1;            // 12-24s: Exclusive withdrawal
+    const DST_PHASE_PUBLIC_WITHDRAWAL: u8 = 2;     // 24-100s: Public withdrawal
+    const DST_PHASE_CANCELLATION: u8 = 3;          // 100-160s: Resolver cancellation
 
     /// A timelock that enforces time-based phases for asset locking.
     /// Matches the 1inch Fusion+ EVM timelock structure with separate
@@ -78,7 +80,9 @@ module aptos_fusion_plus::timelock {
 
     /// Gets the source chain phase based on elapsed time.
     fun get_source_phase(elapsed: u64): u8 {
-        if (elapsed < constants::get_src_withdrawal()) {
+        if (elapsed < constants::get_src_finality_lock()) {
+            SRC_PHASE_FINALITY_LOCK
+        } else if (elapsed < constants::get_src_withdrawal()) {
             SRC_PHASE_WITHDRAWAL
         } else if (elapsed < constants::get_src_public_withdrawal()) {
             SRC_PHASE_PUBLIC_WITHDRAWAL
@@ -93,7 +97,9 @@ module aptos_fusion_plus::timelock {
 
     /// Gets the destination chain phase based on elapsed time.
     fun get_destination_phase(elapsed: u64): u8 {
-        if (elapsed < constants::get_dst_withdrawal()) {
+        if (elapsed < constants::get_dst_finality_lock()) {
+            DST_PHASE_FINALITY_LOCK
+        } else if (elapsed < constants::get_dst_withdrawal()) {
             DST_PHASE_WITHDRAWAL
         } else if (elapsed < constants::get_dst_public_withdrawal()) {
             DST_PHASE_PUBLIC_WITHDRAWAL
@@ -121,7 +127,9 @@ module aptos_fusion_plus::timelock {
 
     /// Gets the remaining time for source chain phases.
     fun get_source_remaining_time(elapsed: u64): u64 {
-        if (elapsed < constants::get_src_withdrawal()) {
+        if (elapsed < constants::get_src_finality_lock()) {
+            constants::get_src_finality_lock() - elapsed
+        } else if (elapsed < constants::get_src_withdrawal()) {
             constants::get_src_withdrawal() - elapsed
         } else if (elapsed < constants::get_src_public_withdrawal()) {
             constants::get_src_public_withdrawal() - elapsed
@@ -136,7 +144,9 @@ module aptos_fusion_plus::timelock {
 
     /// Gets the remaining time for destination chain phases.
     fun get_destination_remaining_time(elapsed: u64): u64 {
-        if (elapsed < constants::get_dst_withdrawal()) {
+        if (elapsed < constants::get_dst_finality_lock()) {
+            constants::get_dst_finality_lock() - elapsed
+        } else if (elapsed < constants::get_dst_withdrawal()) {
             constants::get_dst_withdrawal() - elapsed
         } else if (elapsed < constants::get_dst_public_withdrawal()) {
             constants::get_dst_public_withdrawal() - elapsed
@@ -145,6 +155,32 @@ module aptos_fusion_plus::timelock {
         } else {
             0
         }
+    }
+
+    /// Checks if the timelock is in the finality lock phase (no actions allowed).
+    ///
+    /// @param timelock The Timelock to check.
+    /// @return bool True if in finality lock phase, false otherwise.
+    public fun is_in_finality_lock_phase(timelock: &Timelock): bool {
+        get_phase(timelock) == SRC_PHASE_FINALITY_LOCK || get_phase(timelock) == DST_PHASE_FINALITY_LOCK
+    }
+
+    /// Checks if withdrawal is allowed (not in finality lock and in withdrawal phase).
+    ///
+    /// @param timelock The Timelock to check.
+    /// @return bool True if withdrawal is allowed, false otherwise.
+    public fun is_withdrawal_allowed(timelock: &Timelock): bool {
+        !is_in_finality_lock_phase(timelock) && 
+        (is_in_withdrawal_phase(timelock) || is_in_public_withdrawal_phase(timelock))
+    }
+
+    /// Checks if cancellation is allowed (not in finality lock and in cancellation phase).
+    ///
+    /// @param timelock The Timelock to check.
+    /// @return bool True if cancellation is allowed, false otherwise.
+    public fun is_cancellation_allowed(timelock: &Timelock): bool {
+        !is_in_finality_lock_phase(timelock) && 
+        (is_in_cancellation_phase(timelock) || is_in_public_cancellation_phase(timelock))
     }
 
     /// Gets the total duration of all phases for the chain type.
@@ -243,6 +279,11 @@ module aptos_fusion_plus::timelock {
     }
 
     #[test_only]
+    public fun get_src_phase_finality_lock(): u8 {
+        SRC_PHASE_FINALITY_LOCK
+    }
+
+    #[test_only]
     public fun get_src_phase_withdrawal(): u8 {
         SRC_PHASE_WITHDRAWAL
     }
@@ -260,6 +301,11 @@ module aptos_fusion_plus::timelock {
     #[test_only]
     public fun get_src_phase_public_cancellation(): u8 {
         SRC_PHASE_PUBLIC_CANCELLATION
+    }
+
+    #[test_only]
+    public fun get_dst_phase_finality_lock(): u8 {
+        DST_PHASE_FINALITY_LOCK
     }
 
     #[test_only]

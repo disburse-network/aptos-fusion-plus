@@ -439,11 +439,9 @@ module aptos_fusion_plus::escrow {
         assert!(escrow_ref.resolver == signer_address, EINVALID_CALLER);
 
         let timelock = escrow_ref.timelock;
-        // Check if we're in the correct phase for withdrawal
-        // Withdrawal is allowed in withdrawal phase or public withdrawal phase
+        // Check if withdrawal is allowed (not in finality lock and in withdrawal phase)
         assert!(
-            timelock::is_in_withdrawal_phase(&timelock) || 
-            timelock::is_in_public_withdrawal_phase(&timelock), 
+            timelock::is_withdrawal_allowed(&timelock), 
             EINVALID_PHASE
         );
 
@@ -528,8 +526,13 @@ module aptos_fusion_plus::escrow {
         let escrow_ref = borrow_escrow_mut(&escrow);
         let timelock = escrow_ref.timelock;
 
-        // Check if we're in the correct phase for recovery
-        // Recovery is allowed in cancellation phase or public cancellation phase
+        // Check if cancellation is allowed (not in finality lock and in cancellation phase)
+        assert!(
+            timelock::is_cancellation_allowed(&timelock), 
+            EINVALID_PHASE
+        );
+
+        // Check if we're in private cancellation phase (only resolver can cancel)
         if (timelock::is_in_cancellation_phase(&timelock)) {
             // Private cancellation: only resolver can cancel
             assert!(signer_address == escrow_ref.resolver, EINVALID_CALLER);
@@ -569,10 +572,6 @@ module aptos_fusion_plus::escrow {
         object::delete(delete_ref);
 
         // Emit recovery event for cross-chain coordination
-        // RESOLVER SHOULD MONITOR THIS EVENT:
-        // - Handle cancellation scenarios
-        // - Cancel corresponding escrow on other chain
-        // - Ensure proper cleanup across chains
         event::emit(
             EscrowRecoveredEvent { escrow, recovered_by, returned_to, metadata, amount }
         );

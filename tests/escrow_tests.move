@@ -346,9 +346,10 @@ module aptos_fusion_plus::escrow_tests {
                 hash::sha3_256(TEST_SECRET)
             );
 
-        // Verify timelock is active
         let timelock = escrow::get_timelock(escrow);
-        assert!(timelock::is_in_withdrawal_phase(&timelock) == true, 0);
+        // Initially in finality lock phase (0-12s)
+        assert!(timelock::is_in_finality_lock_phase(&timelock) == true, 0);
+        assert!(timelock::is_in_withdrawal_phase(&timelock) == false, 0);
 
         // Verify hashlock is created with correct hash
         let hashlock = escrow::get_hashlock(escrow);
@@ -372,17 +373,30 @@ module aptos_fusion_plus::escrow_tests {
 
         let timelock = escrow::get_timelock(escrow);
 
-        // Initially in withdrawal phase
+        // Initially in finality lock phase (0-12s)
+        assert!(timelock::is_in_finality_lock_phase(&timelock) == true, 0);
+        assert!(timelock::is_in_withdrawal_phase(&timelock) == false, 0);
+        assert!(timelock::is_in_public_withdrawal_phase(&timelock) == false, 0);
+        assert!(timelock::is_in_cancellation_phase(&timelock) == false, 0);
+        assert!(timelock::is_in_public_cancellation_phase(&timelock) == false, 0);
+
+        // Fast forward to withdrawal phase (12-24s)
+        timestamp::update_global_time_for_test_secs(
+            timelock::get_created_at(&timelock) + 15
+        );
+
+        assert!(timelock::is_in_finality_lock_phase(&timelock) == false, 0);
         assert!(timelock::is_in_withdrawal_phase(&timelock) == true, 0);
         assert!(timelock::is_in_public_withdrawal_phase(&timelock) == false, 0);
         assert!(timelock::is_in_cancellation_phase(&timelock) == false, 0);
         assert!(timelock::is_in_public_cancellation_phase(&timelock) == false, 0);
 
-        // Fast forward to public withdrawal phase
+        // Fast forward to public withdrawal phase (24-120s)
         timestamp::update_global_time_for_test_secs(
-            timelock::get_created_at(&timelock) + 15
+            timelock::get_created_at(&timelock) + 30
         );
 
+        assert!(timelock::is_in_finality_lock_phase(&timelock) == false, 0);
         assert!(timelock::is_in_withdrawal_phase(&timelock) == false, 0);
         assert!(timelock::is_in_public_withdrawal_phase(&timelock) == true, 0);
         assert!(timelock::is_in_cancellation_phase(&timelock) == false, 0);
@@ -803,7 +817,7 @@ module aptos_fusion_plus::escrow_tests {
         // Fast forward to public cancellation phase
         let timelock = escrow::get_timelock(escrow);
         timestamp::update_global_time_for_test_secs(
-            timelock::get_created_at(&timelock) + 122 // Move to public cancellation phase (121-122s)
+            timelock::get_created_at(&timelock) + 190 // Move to public cancellation phase (180-240s)
         );
 
         // Record initial balances
@@ -858,7 +872,7 @@ module aptos_fusion_plus::escrow_tests {
         // Fast forward to cancellation phase
         let timelock = escrow::get_timelock(escrow);
         timestamp::update_global_time_for_test_secs(
-            timelock::get_created_at(&timelock) + 125 // Move to cancellation phase
+            timelock::get_created_at(&timelock) + 130 // Move to cancellation phase (120-180s)
         );
 
         // Try to recover with wrong caller (only resolver can do this in private cancellation)
@@ -997,8 +1011,8 @@ module aptos_fusion_plus::escrow_tests {
         let timelock = escrow::get_timelock(escrow);
         let created_at = timelock::get_created_at(&timelock);
 
-        // Test withdrawal at exact boundary (10 seconds)
-        timestamp::update_global_time_for_test_secs(created_at + 10);
+        // Test withdrawal at exact boundary (24 seconds - withdrawal phase starts)
+        timestamp::update_global_time_for_test_secs(created_at + 24);
         escrow::withdraw(&resolver, escrow, TEST_SECRET);
 
         // Create new escrow for next test
@@ -1015,8 +1029,8 @@ module aptos_fusion_plus::escrow_tests {
         let timelock2 = escrow::get_timelock(escrow2);
         let created_at2 = timelock::get_created_at(&timelock2);
 
-        // Test withdrawal just before boundary (9 seconds)
-        timestamp::update_global_time_for_test_secs(created_at2 + 9);
+        // Test withdrawal just before boundary (23 seconds - still in finality lock)
+        timestamp::update_global_time_for_test_secs(created_at2 + 23);
         escrow::withdraw(&resolver, escrow2, WRONG_SECRET);
 
         // Create new escrow for next test
@@ -1033,8 +1047,8 @@ module aptos_fusion_plus::escrow_tests {
         let timelock3 = escrow::get_timelock(escrow3);
         let created_at3 = timelock::get_created_at(&timelock3);
 
-        // Test withdrawal just after boundary (11 seconds)
-        timestamp::update_global_time_for_test_secs(created_at3 + 11);
+        // Test withdrawal just after boundary (25 seconds - in withdrawal phase)
+        timestamp::update_global_time_for_test_secs(created_at3 + 25);
         escrow::withdraw(&resolver, escrow3, TEST_SECRET);
     }
 
