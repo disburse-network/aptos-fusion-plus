@@ -10,7 +10,7 @@ aptos_fusion_plus = "0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd319218
 aptos_fusion_plus = "0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd3192186ed8eac"
 
 [dependencies]
-AptosFramework = { local = "/Users/swayamkarle/aptos-core/aptos-move/framework/aptos-framework"  }
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework", rev = "main" }
 
 [dev-dependencies]
-AptosFramework = { local = "/Users/swayamkarle/aptos-core/aptos-move/framework/aptos-framework"}
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework", rev = "main" }
