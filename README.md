@@ -155,9 +155,11 @@ aptos-contracts/
 │   ├── hashlock_tests.move
 │   └── helpers/
 │       └── common.move        # Test utilities
-└── Move.toml                  # Project configuration
+├── assets/                    # Documentation assets
+│   └── timelocks.png         # Timelock phase diagram
+├── Move.toml                  # Project configuration
+└── README.md                  # This file
 ```
-
 
 ## Requirements
 
@@ -168,17 +170,22 @@ Before you begin, you need to install the following tools:
 
 ## Quickstart
 
-1. Build the project:
+1. **Clone and navigate to the project**:
+```bash
+cd aptos-contracts
+```
+
+2. **Build the project**:
 ```bash
 aptos move compile --dev
 ```
 
-2. Run tests:
+3. **Run tests**:
 ```bash
 aptos move test --dev
 ```
 
-3. Deploy the contracts:
+4. **Deploy the contracts**:
 ```bash
 aptos move publish --named-addresses aptos_fusion_plus=YOUR_ACCOUNT_ADDRESS
 ```
@@ -190,39 +197,107 @@ aptos move publish --named-addresses aptos_fusion_plus=YOUR_ACCOUNT_ADDRESS
 1. **Create Order**:
 ```move
 fusion_order::new_entry(
-    &signer,
-    metadata,
-    amount,
-    chain_id,
-    hash
+    signer: &signer,
+    source_metadata: Object<Metadata>,
+    source_amount: u64,
+    destination_asset: vector<u8>,
+    destination_amount: u64,
+    destination_recipient: vector<u8>,
+    chain_id: u64,
+    hash: vector<u8>,
+    initial_destination_amount: u64,
+    min_destination_amount: u64,
+    decay_per_second: u64
 );
 ```
 
 2. **Cancel Order** (before resolver picks up):
 ```move
-fusion_order::cancel(&signer, fusion_order);
+fusion_order::cancel(signer: &signer, fusion_order: Object<FusionOrder>);
 ```
 
 ### For Resolvers
 
 1. **Monitor Events**: Listen for `FusionOrderCreatedEvent`
-2. **Accept Order**: Call `escrow::new_from_order_entry()`
-3. **Create Destination Escrow**: Match parameters from `FusionOrderAcceptedEvent`
-4. **Withdraw**: Call `escrow::withdraw()` on both chains
+2. **Accept Order**: Call `escrow::new_from_order_entry(resolver: &signer, fusion_order: Object<FusionOrder>)`
+3. **Create Destination Escrow**: Call `escrow::new_from_resolver_entry()` with matching parameters
+4. **Withdraw**: Call `escrow::withdraw(signer: &signer, escrow: Object<Escrow>, secret: vector<u8>)` on both chains
+5. **Recovery**: Call `escrow::recovery(signer: &signer, escrow: Object<Escrow>)` if needed
 
-## TODO
+## Development
 
-- Local testing
-- Frontend
-- Partial fills
+### Testing
 
-## Hackathon bounties
+The project includes comprehensive test suites for all modules:
+
+```bash
+# Run all tests
+aptos move test --dev
+
+# Run specific test file
+aptos move test --dev --filter fusion_order_tests
+
+# Run with verbose output
+aptos move test --dev --verbose
+```
+
+### Building
+
+```bash
+# Development build
+aptos move compile --dev
+
+# Production build
+aptos move compile
+
+# Build with verification
+aptos move compile --dev --verify
+```
+
+### Deployment
+
+```bash
+# Deploy to devnet
+aptos move publish --named-addresses aptos_fusion_plus=YOUR_ACCOUNT_ADDRESS --network devnet
+
+# Deploy to testnet
+aptos move publish --named-addresses aptos_fusion_plus=YOUR_ACCOUNT_ADDRESS --network testnet
+
+# Deploy to mainnet
+aptos move publish --named-addresses aptos_fusion_plus=YOUR_ACCOUNT_ADDRESS --network mainnet
+```
+
+### Deployed Contract Addresses
+
+The contracts have been deployed to the following networks:
+
+**Testnet:**
+- **Account Address**: `0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd3192186ed8eac`
+- **Package Name**: `aptos_fusion_plus`
+- **Source Digest**: `E589ACFD8E14A36E2662B4989C7B53B2C968305AD614B241A63726F14022F839`
+
+**Devnet:**
+- **Account Address**: `0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd3192186ed8eac`
+- **Package Name**: `aptos_fusion_plus`
+- **Source Digest**: `F55716ADDD6B9F76E04DC3F0040E7F4FE5707630978A9423FC7666844F4DA56F`
+
+**Mainnet:**
+- Not yet deployed (pending security audits and testing)
+
+### Interacting with Deployed Contracts
+
+To interact with the deployed contracts, you can use the Aptos CLI or SDK:
+
+```bash
+# View account resources on testnet
+aptos account list --account 0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd3192186ed8eac --profile testnet
+
+# View account resources on devnet
+aptos account list --account 0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd3192186ed8eac --profile devnet
+```
+
 
 ### Extend Fusion+ to Aptos
-
-This submission is an implementation of 1inch Fusion+ built with Aptos Move. One of the main differences between Move and EVM is that everything in Move is owned, unlike EVM where contracts can transfer user funds with prior approval. This means that the resolver cannot directly transfer the user's funds to the escrow on behalf of the user.
-
-I solved this ownership challenge by implementing a two-step process: users first deposit funds into the `fusion_order.move` module, which stores the funds in an object that only the user and the Escrow module can interact with. The resolver can then withdraw with these pre-deposited funds when creating the escrow (in `escrow.move`). This maintains Move's security model while enabling the Fusion+ workflow.
 
 **Key Protocol Alignments:**
 - **Safety Deposits**: Only resolvers provide safety deposits (users never do)
@@ -234,9 +309,10 @@ Until the resolver picks up the order, the user retains full control and can wit
 
 Besides this, my implementation closely follows the EVM version's architecture, with everything divided into separate modules for clarity and readability: `fusion_order.move` handles order creation on maker side, `escrow.move` manages asset with a timelock and hashlock and `resolver_registry.move` manages the whitelisted resolvers.
 
-- [Deployed smart contracts]()
+## License
 
-### Extend Fusion+ to Any Other Chain
-Since Movement uses the same smart contract language, I also deployed the contracts to Movement Network.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-- [Deployed smart contracts]()
+## Support
+
+For questions and support, please open an issue on GitHub or contact the development team.
