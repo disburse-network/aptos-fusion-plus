@@ -10,7 +10,6 @@ module aptos_fusion_plus::fusion_order {
     use aptos_fusion_plus::resolver_registry;
 
     friend aptos_fusion_plus::escrow;
-    friend aptos_fusion_plus::fusion_order_tests;
 
     // - - - - ERROR CODES - - - -
 
@@ -288,7 +287,7 @@ module aptos_fusion_plus::fusion_order {
             safety_deposit_amount: 0, // User doesn't provide safety deposit
             chain_id,
             hash,
-            /// Dutch auction fields
+            // Dutch auction fields
             initial_destination_amount, // Starting price (e.g., 100200 USDC)
             min_destination_amount,     // Minimum price (floor)
             decay_per_second,           // Price decay per second
@@ -662,7 +661,7 @@ module aptos_fusion_plus::fusion_order {
     /// @param hash The hash value to check.
     /// @return bool True if the hash is valid, false otherwise.
     public fun is_valid_hash(hash: &vector<u8>): bool {
-        std::vector::length(hash) > 0
+        hash.length() > 0
     }
 
     /// Checks if a destination asset specification represents a native asset.
@@ -671,15 +670,15 @@ module aptos_fusion_plus::fusion_order {
     /// @param destination_asset The destination asset specification to check.
     /// @return bool True if the asset is native, false if it's a contract address.
     public fun is_native_asset(destination_asset: &vector<u8>): bool {
-        let len = std::vector::length(destination_asset);
+        let len = destination_asset.length();
         if (len == 0) { return true }; // Empty vector is considered native
         
         let i = 0;
         while (i < len) {
-            if (*std::vector::borrow(destination_asset, i) != 0) {
+            if (destination_asset[i] != 0) {
                 return false
             };
-            i = i + 1;
+            i += 1;
         };
         true
     }
@@ -690,7 +689,7 @@ module aptos_fusion_plus::fusion_order {
     /// @param destination_asset The destination asset specification to check.
     /// @return bool True if the asset is a valid EVM contract address, false otherwise.
     public fun is_evm_contract_address(destination_asset: &vector<u8>): bool {
-        !is_native_asset(destination_asset) && std::vector::length(destination_asset) == 20
+        !is_native_asset(destination_asset) && destination_asset.length() == 20
     }
 
     /// Checks if a destination recipient address is a valid EVM address.
@@ -699,7 +698,7 @@ module aptos_fusion_plus::fusion_order {
     /// @param destination_recipient The destination recipient address to check.
     /// @return bool True if the address is a valid EVM address, false otherwise.
     public fun is_valid_evm_address(destination_recipient: &vector<u8>): bool {
-        std::vector::length(destination_recipient) == 20
+        destination_recipient.length() == 20
     }
 
     /// Checks if a fusion order exists.
@@ -777,7 +776,7 @@ module aptos_fusion_plus::fusion_order {
     /// @return &FusionOrderController Mutable reference to the controller.
     inline fun borrow_fusion_order_controller_mut(
         fusion_order_obj: &Object<FusionOrder>
-    ): &FusionOrderController acquires FusionOrderController {
+    ): &FusionOrderController {
         borrow_global_mut<FusionOrderController>(object::object_address(fusion_order_obj))
     }
 
@@ -787,7 +786,7 @@ module aptos_fusion_plus::fusion_order {
     /// @return &FusionOrder Immutable reference to the fusion order.
     inline fun borrow_fusion_order(
         fusion_order_obj: &Object<FusionOrder>
-    ): &FusionOrder acquires FusionOrder {
+    ): &FusionOrder {
         borrow_global<FusionOrder>(object::object_address(fusion_order_obj))
     }
 
@@ -797,7 +796,7 @@ module aptos_fusion_plus::fusion_order {
     /// @return &mut FusionOrder Mutable reference to the fusion order.
     inline fun borrow_fusion_order_mut(
         fusion_order_obj: &Object<FusionOrder>
-    ): &mut FusionOrder acquires FusionOrder {
+    ): &mut FusionOrder {
         borrow_global_mut<FusionOrder>(object::object_address(fusion_order_obj))
     }
 

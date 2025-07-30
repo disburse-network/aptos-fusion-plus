@@ -63,7 +63,7 @@ module aptos_fusion_plus::hashlock {
     /// @param hash The hash value to check.
     /// @return bool True if the hash is valid, false otherwise.
     public fun is_valid_hash(hash: &vector<u8>): bool {
-        vector::length(hash) == HASH_LENGTH
+        hash.length() == HASH_LENGTH
     }
 
     /// Checks if a secret is valid (non-empty).
@@ -71,7 +71,7 @@ module aptos_fusion_plus::hashlock {
     /// @param secret The secret to check.
     /// @return bool True if the secret is valid, false otherwise.
     public fun is_valid_secret(secret: &vector<u8>): bool {
-        vector::length(secret) >= MIN_SECRET_LENGTH
+        secret.length() >= MIN_SECRET_LENGTH
     }
 
     #[test_only]

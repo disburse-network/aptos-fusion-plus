@@ -685,7 +685,7 @@ module aptos_fusion_plus::escrow {
     ///
     /// @param escrow_obj The escrow object.
     /// @return &Escrow Immutable reference to the escrow.
-    inline fun borrow_escrow(escrow_obj: &Object<Escrow>): &Escrow acquires Escrow {
+    inline fun borrow_escrow(escrow_obj: &Object<Escrow>): &Escrow {
         borrow_global<Escrow>(object::object_address(escrow_obj))
     }
 
@@ -693,7 +693,7 @@ module aptos_fusion_plus::escrow {
     ///
     /// @param escrow_obj The escrow object.
     /// @return &mut Escrow Mutable reference to the escrow.
-    inline fun borrow_escrow_mut(escrow_obj: &Object<Escrow>): &mut Escrow acquires Escrow {
+    inline fun borrow_escrow_mut(escrow_obj: &Object<Escrow>): &mut Escrow {
         borrow_global_mut<Escrow>(object::object_address(escrow_obj))
     }
 
@@ -703,7 +703,7 @@ module aptos_fusion_plus::escrow {
     /// @return &EscrowController Immutable reference to the controller.
     inline fun borrow_escrow_controller(
         escrow_obj: &Object<Escrow>
-    ): &EscrowController acquires EscrowController {
+    ): &EscrowController {
         borrow_global<EscrowController>(object::object_address(escrow_obj))
     }
 
@@ -713,7 +713,7 @@ module aptos_fusion_plus::escrow {
     /// @return &mut EscrowController Mutable reference to the controller.
     inline fun borrow_escrow_controller_mut(
         escrow_obj: &Object<Escrow>
-    ): &mut EscrowController acquires EscrowController {
+    ): &mut EscrowController {
         borrow_global_mut<EscrowController>(object::object_address(escrow_obj))
     }
 }

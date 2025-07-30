@@ -112,7 +112,7 @@ module aptos_fusion_plus::resolver_registry {
             status: true
         };
 
-        table::add(&mut resolver_registry.resolvers, address, resolver);
+        resolver_registry.resolvers.add(address, resolver);
 
         // Emit registration event
         event::emit(
@@ -139,7 +139,7 @@ module aptos_fusion_plus::resolver_registry {
         assert!(resolver_exists(address), ENOT_REGISTERED);
 
         let resolver_registry = borrow_resolver_registry_mut(@aptos_fusion_plus);
-        let resolver = table::borrow_mut(&mut resolver_registry.resolvers, address);
+        let resolver = resolver_registry.resolvers.borrow_mut(address);
 
         assert!(resolver.status == true, EINVALID_STATUS_CHANGE);
 
@@ -167,7 +167,7 @@ module aptos_fusion_plus::resolver_registry {
         assert!(resolver_exists(address), ENOT_REGISTERED);
 
         let resolver_registry = borrow_resolver_registry_mut(@aptos_fusion_plus);
-        let resolver = table::borrow_mut(&mut resolver_registry.resolvers, address);
+        let resolver = resolver_registry.resolvers.borrow_mut(address);
 
         assert!(resolver.status == false, EINVALID_STATUS_CHANGE);
 
@@ -190,7 +190,7 @@ module aptos_fusion_plus::resolver_registry {
     /// @return u64 The registration timestamp.
     public fun get_resolver_registered_at(resolver: address): u64 acquires ResolverRegistry {
         let resolver_registry = borrow_resolver_registry(@aptos_fusion_plus);
-        let resolver_data = table::borrow(&resolver_registry.resolvers, resolver);
+        let resolver_data = resolver_registry.resolvers.borrow(resolver);
         resolver_data.registered_at
     }
 
@@ -201,7 +201,7 @@ module aptos_fusion_plus::resolver_registry {
     /// @return u64 The last status change timestamp.
     public fun get_resolver_last_status_change(resolver: address): u64 acquires ResolverRegistry {
         let resolver_registry = borrow_resolver_registry(@aptos_fusion_plus);
-        let resolver_data = table::borrow(&resolver_registry.resolvers, resolver);
+        let resolver_data = resolver_registry.resolvers.borrow(resolver);
         resolver_data.last_status_change
     }
 
@@ -212,8 +212,8 @@ module aptos_fusion_plus::resolver_registry {
     /// @return bool True if the resolver is registered and active, false otherwise.
     public fun is_active_resolver(address: address): bool acquires ResolverRegistry {
         let resolver_registry = borrow_resolver_registry(@aptos_fusion_plus);
-        if (table::contains(&resolver_registry.resolvers, address)) {
-            let resolver = table::borrow(&resolver_registry.resolvers, address);
+        if (resolver_registry.resolvers.contains(address)) {
+            let resolver = resolver_registry.resolvers.borrow(address);
             resolver.status
         } else { false }
     }
@@ -226,7 +226,7 @@ module aptos_fusion_plus::resolver_registry {
     /// @return bool True if the resolver is registered, false otherwise.
     fun resolver_exists(address: address): bool acquires ResolverRegistry {
         let resolver_registry = borrow_resolver_registry(@aptos_fusion_plus);
-        table::contains(&resolver_registry.resolvers, address)
+        resolver_registry.resolvers.contains(address)
     }
 
     /// Asserts that the signer is the admin (@aptos_fusion_plus).
@@ -245,7 +245,7 @@ module aptos_fusion_plus::resolver_registry {
     /// @return &ResolverRegistry Immutable reference to the resolver registry.
     inline fun borrow_resolver_registry(
         address: address
-    ): &ResolverRegistry acquires ResolverRegistry {
+    ): &ResolverRegistry {
         borrow_global<ResolverRegistry>(address)
     }
 
@@ -255,7 +255,7 @@ module aptos_fusion_plus::resolver_registry {
     /// @return &mut ResolverRegistry Mutable reference to the resolver registry.
     inline fun borrow_resolver_registry_mut(
         address: address
-    ): &mut ResolverRegistry acquires ResolverRegistry {
+    ): &mut ResolverRegistry {
         borrow_global_mut<ResolverRegistry>(address)
     }
 
