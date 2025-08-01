@@ -404,7 +404,7 @@ module aptos_fusion_plus::fusion_order_tests {
         // Try to accept order with invalid resolver
         // Directly call resolver_accept_order
         let (asset, safety_deposit_asset) =
-            fusion_order::resolver_accept_order(&invalid_resolver, fusion_order);
+            fusion_order::resolver_accept_order_for_test(&invalid_resolver, fusion_order);
 
         // Deposit assets into 0x0
         primary_fungible_store::deposit(@0x0, asset);
@@ -441,7 +441,7 @@ module aptos_fusion_plus::fusion_order_tests {
         assert!(object::object_exists<FusionOrder>(fusion_order_address) == false, 0);
 
         let (asset, safety_deposit_asset) =
-            fusion_order::resolver_accept_order(&resolver, fusion_order);
+            fusion_order::resolver_accept_order_for_test(&resolver, fusion_order);
 
         // Deposit assets into 0x0
         primary_fungible_store::deposit(@0x0, asset);
@@ -552,7 +552,7 @@ module aptos_fusion_plus::fusion_order_tests {
 
         // First resolver accepts the order (provides safety deposit)
         let (asset1, safety_deposit_asset1) =
-            fusion_order::resolver_accept_order(&resolver1, fusion_order);
+            fusion_order::resolver_accept_order_for_test(&resolver1, fusion_order);
 
         // Verify assets are received (main asset from user + safety deposit from resolver)
         assert!(fungible_asset::amount(&asset1) == ASSET_AMOUNT, 0);
@@ -711,7 +711,7 @@ module aptos_fusion_plus::fusion_order_tests {
         // Directly call resolver_accept_order
         // Resolver provides safety deposit when accepting order
         let (asset, safety_deposit_asset) =
-            fusion_order::resolver_accept_order(&resolver, fusion_order);
+            fusion_order::resolver_accept_order_for_test(&resolver, fusion_order);
 
         // Verify the fusion order is deleted
         assert!(object::object_exists<FusionOrder>(fusion_order_address) == false, 0);
@@ -868,7 +868,7 @@ module aptos_fusion_plus::fusion_order_tests {
 
         // Resolver should be able to accept order with different chain ID
         let (asset, safety_deposit_asset) =
-            fusion_order::resolver_accept_order(&resolver, fusion_order);
+            fusion_order::resolver_accept_order_for_test(&resolver, fusion_order);
 
         // Verify assets are received
         assert!(fungible_asset::amount(&asset) == ASSET_AMOUNT, 0);
@@ -1056,7 +1056,7 @@ module aptos_fusion_plus::fusion_order_tests {
 
         // Try to accept order with insufficient safety deposit (should fail)
         let (asset, safety_deposit_asset) =
-            fusion_order::resolver_accept_order(&poor_resolver, fusion_order);
+            fusion_order::resolver_accept_order_for_test(&poor_resolver, fusion_order);
 
         // Clean up (this won't be reached due to expected failure)
         primary_fungible_store::deposit(@0x0, asset);
@@ -1105,7 +1105,7 @@ module aptos_fusion_plus::fusion_order_tests {
 
         // First resolver accepts the order
         let (asset1, safety_deposit_asset1) =
-            fusion_order::resolver_accept_order(&resolver1, fusion_order);
+            fusion_order::resolver_accept_order_for_test(&resolver1, fusion_order);
 
         // Verify assets are received
         assert!(fungible_asset::amount(&asset1) == ASSET_AMOUNT, 0);

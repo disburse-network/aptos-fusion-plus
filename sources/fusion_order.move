@@ -10,8 +10,6 @@ module aptos_fusion_plus::fusion_order {
     use aptos_fusion_plus::resolver_registry;
 
     friend aptos_fusion_plus::escrow;
-    friend aptos_fusion_plus::fusion_order_tests;
-    friend aptos_fusion_plus::simple_test;
 
     // - - - - ERROR CODES - - - -
 
@@ -497,6 +495,23 @@ module aptos_fusion_plus::fusion_order {
         // CROSS-CHAIN LOGIC: These assets will be locked in escrow
         (asset, safety_deposit_asset)
 
+    }
+
+    #[test_only]
+    /// Test-only version of resolver_accept_order that can be called from test modules.
+    /// This function has the same implementation as resolver_accept_order but is public for testing.
+    ///
+    /// @param signer The signer of the resolver accepting the order.
+    /// @param fusion_order The fusion order to accept.
+    ///
+    /// @reverts EOBJECT_DOES_NOT_EXIST if the fusion order does not exist.
+    /// @reverts EINVALID_RESOLVER if the signer is not an active resolver.
+    /// @reverts EINSUFFICIENT_BALANCE if resolver has insufficient safety deposit.
+    /// @return (FungibleAsset, FungibleAsset) The main asset and safety deposit asset for escrow creation.
+    public fun resolver_accept_order_for_test(
+        signer: &signer, fusion_order: Object<FusionOrder>
+    ): (FungibleAsset, FungibleAsset) acquires FusionOrder, FusionOrderController {
+        resolver_accept_order(signer, fusion_order)
     }
 
     // - - - - GETTER FUNCTIONS - - - -

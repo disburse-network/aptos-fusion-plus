@@ -1,0 +1,10 @@
+{
+    "devnet": {
+        "address": "0xa39c90ee66e21c276192abcb0bd02b6e791b6f13f9b51c272aa4c70f4eb99e50",
+        "explorer": "https://explorer.aptoslabs.com/account/0xa39c90ee66e21c276192abcb0bd02b6e791b6f13f9b51c272aa4c70f4eb99e50/modules/packages/aptos_fusion_plus?network=devnet"
+    },
+    "testnet": {
+        "address": "0xd4d479bbcad621f806f2ed82aae05c6bcb98b01c02a056933d074729f4872192",
+        "explorer": "https://explorer.aptoslabs.com/account/0xd4d479bbcad621f806f2ed82aae05c6bcb98b01c02a056933d074729f4872192/modules/packages/aptos_fusion_plus?network=testnet"
+    }
+}
