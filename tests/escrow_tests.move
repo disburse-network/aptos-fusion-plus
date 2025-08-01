@@ -23,16 +23,14 @@ module aptos_fusion_plus::escrow_tests {
     const MINT_AMOUNT: u64 = 100000000; // 100 token
     const ASSET_AMOUNT: u64 = 1000000; // 1 token
 
+    // Add these constants at the top for destination asset/recipient
+    const NATIVE_ASSET: vector<u8> = b""; // Empty vector represents native asset
+    const EVM_CONTRACT_ADDRESS: vector<u8> = b"\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11"; // 20-byte EVM address
+    const DESTINATION_RECIPIENT: vector<u8> = b"\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22";
+
     // Test secrets and hashes
     const TEST_SECRET: vector<u8> = b"my secret";
     const WRONG_SECRET: vector<u8> = b"wrong secret";
-
-    // Test destination parameters
-    const DESTINATION_AMOUNT: u64 = 500000;
-    const NATIVE_ASSET: vector<u8> = b"";
-    // Use a real 20-byte EVM address for all tests
-    const EVM_CONTRACT_ADDRESS: vector<u8> = b"\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11"; // 20 bytes
-    const DESTINATION_RECIPIENT: vector<u8> = b"\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11"; // 20 bytes
 
     fun setup_test(): (signer, signer, signer, Object<Metadata>, MintRef) {
         timestamp::set_time_has_started_for_testing(
@@ -73,13 +71,12 @@ module aptos_fusion_plus::escrow_tests {
             metadata,
             amount,
             NATIVE_ASSET,           // Default to native asset
-            amount,                  // Default destination amount same as source
             DESTINATION_RECIPIENT,   // Default recipient
             chain_id,
             hash,
-            100200,
-            100000,
-            20
+            100200, // initial_destination_amount
+            100000, // min_destination_amount
+            20      // decay_per_second
         )
     }
 

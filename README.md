@@ -201,7 +201,6 @@ fusion_order::new_entry(
     source_metadata: Object<Metadata>,
     source_amount: u64,
     destination_asset: vector<u8>,
-    destination_amount: u64,
     destination_recipient: vector<u8>,
     chain_id: u64,
     hash: vector<u8>,

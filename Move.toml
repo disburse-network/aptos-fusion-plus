@@ -4,10 +4,7 @@ version = "1.0.0"
 upgrade_policy = "compatible"
 
 [addresses]
-aptos_fusion_plus = "0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd3192186ed8eac"
-
-[dev-addresses]
-aptos_fusion_plus = "0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd3192186ed8eac"
+aptos_fusion_plus = "0xa39c90ee66e21c276192abcb0bd02b6e791b6f13f9b51c272aa4c70f4eb99e50"
 
 [dependencies]
 AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework", rev = "main" }

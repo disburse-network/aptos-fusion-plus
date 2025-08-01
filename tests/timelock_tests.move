@@ -1,9 +1,8 @@
 #[test_only]
 module aptos_fusion_plus::timelock_tests {
-    use std::signer;
     use aptos_framework::account;
     use aptos_framework::timestamp;
-    use aptos_fusion_plus::timelock::{Self, Timelock};
+    use aptos_fusion_plus::timelock;
 
     // Test constants (updated for 1inch Fusion+ model)
     const FINALITY_LOCK_DURATION: u64 = 12;  // 12sec finality lock

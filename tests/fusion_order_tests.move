@@ -22,7 +22,6 @@ module aptos_fusion_plus::fusion_order_tests {
     const ASSET_AMOUNT: u64 = 1000000; // 1 token
 
     // Add these constants at the top for destination asset/recipient
-    const DESTINATION_AMOUNT: u64 = 1000000;
     const DESTINATION_ASSET: vector<u8> = b"\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11";
     const DESTINATION_RECIPIENT: vector<u8> = b"\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22";
 
@@ -76,13 +75,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         // Verify initial state
@@ -135,13 +133,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -176,13 +173,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         // Wrong caller tries to cancel the order
@@ -201,13 +197,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         let fusion_order2 =
@@ -216,13 +211,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT * 2,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT * 2,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(WRONG_SECRET),
-                DESTINATION_AMOUNT * 2,
-                DESTINATION_AMOUNT * 2,
-                20
+                2000000, // initial_destination_amount
+                1800000, // min_destination_amount
+                20       // decay_per_second
             );
 
         // Note: No safety deposit verification since user doesn't provide safety deposit
@@ -254,13 +248,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         let fusion_order2 =
@@ -269,13 +262,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT * 2,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT * 2,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(WRONG_SECRET),
-                DESTINATION_AMOUNT * 2,
-                DESTINATION_AMOUNT * 2,
-                20
+                2000000, // initial_destination_amount
+                1800000, // min_destination_amount
+                20       // decay_per_second
             );
 
         // Each owner cancels their own order
@@ -311,13 +303,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 large_amount,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         // Owner cancels the order
@@ -339,13 +330,12 @@ module aptos_fusion_plus::fusion_order_tests {
             metadata,
             0, // Zero amount should fail
             DESTINATION_ASSET,
-            DESTINATION_AMOUNT,
             DESTINATION_RECIPIENT,
             CHAIN_ID,
             hash::sha3_256(TEST_SECRET),
-            DESTINATION_AMOUNT,
-            DESTINATION_AMOUNT,
-            20
+            1000000, // initial_destination_amount
+            900000,  // min_destination_amount
+            20       // decay_per_second
         );
     }
 
@@ -359,13 +349,12 @@ module aptos_fusion_plus::fusion_order_tests {
             metadata,
             ASSET_AMOUNT,
             DESTINATION_ASSET,
-            DESTINATION_AMOUNT,
             DESTINATION_RECIPIENT,
             CHAIN_ID,
             vector::empty(), // Empty hash should fail
-            DESTINATION_AMOUNT,
-            DESTINATION_AMOUNT,
-            20
+            1000000, // initial_destination_amount
+            900000,  // min_destination_amount
+            20       // decay_per_second
         );
     }
 
@@ -381,13 +370,12 @@ module aptos_fusion_plus::fusion_order_tests {
             metadata,
             insufficient_amount,
             DESTINATION_ASSET,
-            DESTINATION_AMOUNT,
             DESTINATION_RECIPIENT,
             CHAIN_ID,
             hash::sha3_256(TEST_SECRET),
-            DESTINATION_AMOUNT,
-            DESTINATION_AMOUNT,
-            20
+            1000000, // initial_destination_amount
+            900000,  // min_destination_amount
+            20       // decay_per_second
         );
     }
 
@@ -402,13 +390,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         // Create a different account that's not the resolver
@@ -437,13 +424,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -472,13 +458,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         // Test is_valid_hash
@@ -517,13 +502,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 large_hash,
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         // Verify the hash is stored correctly
@@ -558,13 +542,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         // First resolver accepts the order (provides safety deposit)
@@ -592,13 +575,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT * 2,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT * 2,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(WRONG_SECRET),
-                DESTINATION_AMOUNT * 2,
-                DESTINATION_AMOUNT * 2,
-                20
+                2000000, // initial_destination_amount
+                1800000, // min_destination_amount
+                20       // decay_per_second
             );
 
         // For the second resolver, we'll just verify the order exists
@@ -622,13 +604,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -658,13 +639,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -715,13 +695,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -784,13 +763,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         let fusion_order_address = object::object_address(&fusion_order);
@@ -843,13 +821,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         // Verify NO safety deposit was transferred (user doesn't provide safety deposit)
@@ -881,13 +858,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 different_chain_id,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         // Resolver should be able to accept order with different chain ID
@@ -918,13 +894,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 1,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         assert!(fusion_order::get_source_amount(min_fusion_order) == 1, 0);
@@ -938,13 +913,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 max_amount,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         assert!(fusion_order::get_source_amount(max_fusion_order) == max_amount, 0);
@@ -969,13 +943,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 min_hash,
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         assert!(fusion_order::get_hash(min_hash_order) == min_hash, 0);
@@ -995,13 +968,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 max_hash,
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         assert!(fusion_order::get_hash(max_hash_order) == max_hash, 0);
@@ -1020,13 +992,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 min_chain_id,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         assert!(fusion_order::get_chain_id(min_chain_order) == min_chain_id, 0);
@@ -1040,13 +1011,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 max_chain_id,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         assert!(fusion_order::get_chain_id(max_chain_order) == max_chain_id, 0);
@@ -1067,13 +1037,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         // Create a resolver without safety deposit tokens
@@ -1126,13 +1095,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(TEST_SECRET),
-                DESTINATION_AMOUNT,
-                DESTINATION_AMOUNT,
-                20
+                1000000, // initial_destination_amount
+                900000,  // min_destination_amount
+                20       // decay_per_second
             );
 
         // First resolver accepts the order
@@ -1160,13 +1128,12 @@ module aptos_fusion_plus::fusion_order_tests {
                 metadata,
                 ASSET_AMOUNT * 2,
                 DESTINATION_ASSET,
-                DESTINATION_AMOUNT * 2,
                 DESTINATION_RECIPIENT,
                 CHAIN_ID,
                 hash::sha3_256(WRONG_SECRET),
-                DESTINATION_AMOUNT * 2,
-                DESTINATION_AMOUNT * 2,
-                20
+                2000000, // initial_destination_amount
+                1800000, // min_destination_amount
+                20       // decay_per_second
             );
 
         // Ensure second resolver has enough tokens for the larger order
@@ -1198,7 +1165,6 @@ module aptos_fusion_plus::fusion_order_tests {
             metadata,
             ASSET_AMOUNT,
             DESTINATION_ASSET,
-            DESTINATION_AMOUNT,
             DESTINATION_RECIPIENT,
             CHAIN_ID,
             hash::sha3_256(TEST_SECRET),

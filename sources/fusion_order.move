@@ -10,6 +10,8 @@ module aptos_fusion_plus::fusion_order {
     use aptos_fusion_plus::resolver_registry;
 
     friend aptos_fusion_plus::escrow;
+    friend aptos_fusion_plus::fusion_order_tests;
+    friend aptos_fusion_plus::simple_test;
 
     // - - - - ERROR CODES - - - -
 
@@ -35,7 +37,8 @@ module aptos_fusion_plus::fusion_order {
     /// - This event indicates a user wants to swap assets to a different chain
     /// - chain_id: Shows which blockchain the user wants to swap TO
     /// - source_amount: How much the user is depositing
-    /// - destination_amount: How much they expect to receive
+    /// - initial_destination_amount: Starting price of Dutch auction
+    /// - min_destination_amount: Minimum price of Dutch auction
     /// - destination_recipient: EVM address that should receive destination assets
     /// 
     /// RESOLVER SHOULD:
@@ -49,13 +52,12 @@ module aptos_fusion_plus::fusion_order {
         source_metadata: Object<Metadata>,  // Asset type they're depositing
         source_amount: u64,                 // Amount they're depositing
         destination_asset: vector<u8>,      // Destination asset (EVM address or native)
-        destination_amount: u64,            // Amount they expect to receive
         destination_recipient: vector<u8>,  // EVM address to receive destination assets
         chain_id: u64,                      // Destination chain ID
-        initial_destination_amount: u64,
-        min_destination_amount: u64,
-        decay_per_second: u64,
-        auction_start_time: u64,
+        initial_destination_amount: u64,    // Starting price of Dutch auction
+        min_destination_amount: u64,        // Minimum price of Dutch auction
+        decay_per_second: u64,              // Price decay per second
+        auction_start_time: u64,            // When auction started
         current_price: u64                  // Current Dutch auction price at creation time
     }
 
@@ -97,14 +99,13 @@ module aptos_fusion_plus::fusion_order {
         source_metadata: Object<Metadata>,  // Source asset type
         source_amount: u64,                 // Source amount
         destination_asset: vector<u8>,      // Destination asset (EVM address or native)
-        destination_amount: u64,            // Destination amount
         destination_recipient: vector<u8>,  // EVM address to receive destination assets
         chain_id: u64,                      // Destination chain ID
-        initial_destination_amount: u64,
-        min_destination_amount: u64,
-        decay_per_second: u64,
-        auction_start_time: u64,
-        current_price: u64
+        initial_destination_amount: u64,    // Starting price of Dutch auction
+        min_destination_amount: u64,        // Minimum price of Dutch auction
+        decay_per_second: u64,              // Price decay per second
+        auction_start_time: u64,            // When auction started
+        current_price: u64                  // Current Dutch auction price at acceptance time
     }
 
     // - - - - STRUCTS - - - -
@@ -135,7 +136,6 @@ module aptos_fusion_plus::fusion_order {
     ///                         - If all zeros (0x0000...): Native asset (ETH, APT, etc.)
     ///                         - If contract address: ERC20/ERC721 token address on destination chain
     ///                         - Stored as vector<u8> to handle EVM addresses (20 bytes) and native asset (32 bytes)
-    /// @param destination_amount The amount of destination asset expected.
     /// @param destination_recipient The EVM address that should receive destination assets:
     ///                              - Stored as vector<u8> to handle EVM address format (20 bytes)
     ///                              - This is the address on the destination chain (EVM format)
@@ -152,7 +152,6 @@ module aptos_fusion_plus::fusion_order {
         source_metadata: Object<Metadata>,
         source_amount: u64,
         destination_asset: vector<u8>,      // EVM address or native asset identifier
-        destination_amount: u64,
         destination_recipient: vector<u8>,  // EVM address (20 bytes) for destination recipient
         safety_deposit_metadata: Object<Metadata>,
         safety_deposit_amount: u64, // Always 0 - resolver provides safety deposit
@@ -173,7 +172,6 @@ module aptos_fusion_plus::fusion_order {
         source_metadata: Object<Metadata>,
         source_amount: u64,
         destination_asset: vector<u8>,
-        destination_amount: u64,
         destination_recipient: vector<u8>,
         chain_id: u64,
         hash: vector<u8>,
@@ -181,7 +179,7 @@ module aptos_fusion_plus::fusion_order {
         min_destination_amount: u64,
         decay_per_second: u64
     ) {
-        new(signer, source_metadata, source_amount, destination_asset, destination_amount, destination_recipient, chain_id, hash, initial_destination_amount, min_destination_amount, decay_per_second);
+        new(signer, source_metadata, source_amount, destination_asset, destination_recipient, chain_id, hash, initial_destination_amount, min_destination_amount, decay_per_second);
     }
 
     // - - - - PUBLIC FUNCTIONS - - - -
@@ -206,7 +204,6 @@ module aptos_fusion_plus::fusion_order {
     ///                         - If all zeros (0x0000...): Native asset (ETH, APT, etc.)
     ///                         - If contract address: ERC20/ERC721 token address on destination chain
     ///                         - Stored as vector<u8> to handle EVM addresses (20 bytes) and native asset (32 bytes)
-    /// @param destination_amount The amount of destination asset expected.
     /// @param destination_recipient The EVM address that should receive destination assets:
     ///                              - Stored as vector<u8> to handle EVM address format (20 bytes)
     ///                              - This is the address on the destination chain (EVM format)
@@ -224,7 +221,6 @@ module aptos_fusion_plus::fusion_order {
         source_metadata: Object<Metadata>,
         source_amount: u64,
         destination_asset: vector<u8>,
-        destination_amount: u64,
         destination_recipient: vector<u8>,
         chain_id: u64,
         hash: vector<u8>,
@@ -237,7 +233,6 @@ module aptos_fusion_plus::fusion_order {
 
         // Validate inputs
         assert!(source_amount > 0, EINVALID_AMOUNT);
-        assert!(destination_amount > 0, EINVALID_AMOUNT);
         assert!(is_valid_hash(&hash), EINVALID_HASH);
         assert!(
             primary_fungible_store::balance(signer_address, source_metadata) >= source_amount,
@@ -281,7 +276,6 @@ module aptos_fusion_plus::fusion_order {
             source_metadata,
             source_amount,
             destination_asset,      // EVM address or native asset identifier
-            destination_amount,
             destination_recipient,  // EVM address (20 bytes) for destination recipient
             safety_deposit_metadata: constants::get_safety_deposit_metadata(),
             safety_deposit_amount: 0, // User doesn't provide safety deposit
@@ -323,7 +317,6 @@ module aptos_fusion_plus::fusion_order {
                 source_metadata,
                 source_amount,
                 destination_asset,
-                destination_amount,
                 destination_recipient,
                 chain_id,
                 initial_destination_amount: initial_destination_amount_val,
@@ -440,7 +433,6 @@ module aptos_fusion_plus::fusion_order {
         let source_metadata = fusion_order_ref.source_metadata;
         let source_amount = fusion_order_ref.source_amount;
         let destination_asset = fusion_order_ref.destination_asset;
-        let destination_amount = fusion_order_ref.destination_amount;
         let destination_recipient = fusion_order_ref.destination_recipient;
         let chain_id = fusion_order_ref.chain_id;
         let initial_destination_amount = fusion_order_ref.initial_destination_amount;
@@ -491,7 +483,6 @@ module aptos_fusion_plus::fusion_order {
                 source_metadata,
                 source_amount,
                 destination_asset,
-                destination_amount,
                 destination_recipient,
                 chain_id,
                 initial_destination_amount,
@@ -551,17 +542,6 @@ module aptos_fusion_plus::fusion_order {
     ): vector<u8> acquires FusionOrder {
         let fusion_order_ref = borrow_fusion_order(&fusion_order);
         fusion_order_ref.destination_asset
-    }
-
-    /// Gets the destination amount from a fusion order.
-    ///
-    /// @param fusion_order The fusion order to get the destination amount from.
-    /// @return u64 The amount of destination asset expected.
-    public fun get_destination_amount(
-        fusion_order: Object<FusionOrder>
-    ): u64 acquires FusionOrder {
-        let fusion_order_ref = borrow_fusion_order(&fusion_order);
-        fusion_order_ref.destination_amount
     }
 
     /// Gets the destination recipient address from a fusion order.
