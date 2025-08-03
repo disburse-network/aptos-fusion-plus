@@ -6,7 +6,45 @@ A secure cross-chain atomic swap protocol built on Aptos that enables trustless 
 
 The protocol enables secure cross-chain swaps through a clean separation of concerns with hashlocked and timelocked escrows. It consists of several key components that work together to provide a secure, trustless cross-chain swap experience.
 
-### Core Components
+## 🧪 Testing Scripts
+
+This repository includes comprehensive testing scripts in the `scripts/` directory that implement a complete cross-chain atomic swap flow on Aptos testnet.
+
+### Quick Start
+
+```bash
+# Install and setup testing scripts
+npm run setup
+
+# Run complete test suite
+npm test
+
+# Run main application
+npm start
+
+# Development mode with hot reload
+npm run dev
+```
+
+### Test Coverage
+
+The testing scripts provide:
+
+- ✅ **Complete Cross-Chain Flow**: Fusion order creation → Acceptance → Escrow creation → Withdrawal
+- ✅ **Real Event Listening**: Extracts actual object addresses from blockchain events
+- ✅ **Production-Ready**: Uses real testnet transactions with proper error handling
+- ✅ **Latest SDK Integration**: Uses Aptos TypeScript SDK v4.0.0
+
+### Key Features
+
+- **Event-Driven Architecture**: Successfully extracts object addresses from `FusionOrderCreatedEvent` and `EscrowCreatedEvent`
+- **Real Transaction Testing**: All tests use actual testnet transactions
+- **Complete Flow Testing**: Tests the entire cross-chain atomic swap lifecycle
+- **Error Handling**: Proper fallback mechanisms and timing constraint handling
+
+For detailed documentation, see [scripts/README.md](scripts/README.md).
+
+## Core Components
 
 1. **Fusion Orders (`fusion_order.move`)**
    - User-created orders that can be cancelled before pickup

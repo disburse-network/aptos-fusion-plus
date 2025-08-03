@@ -1,0 +1,35 @@
+{
+  "name": "aptos-fusion-plus",
+  "version": "1.0.0",
+  "description": "Cross-chain atomic swap smart contract for Aptos blockchain",
+  "main": "scripts/src/index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "cd scripts && npm test",
+    "test:watch": "cd scripts && npm run dev",
+    "build": "cd scripts && npm run build",
+    "start": "cd scripts && npm start",
+    "dev": "cd scripts && npm run dev",
+    "install:scripts": "cd scripts && npm install",
+    "setup": "npm run install:scripts && npm run build"
+  },
+  "keywords": [
+    "aptos",
+    "fusion-plus",
+    "cross-chain",
+    "atomic-swap",
+    "smart-contract",
+    "blockchain",
+    "move"
+  ],
+  "author": "0xmihirsahu",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1inch-hack/aptos-fusion-plus.git"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+} 
