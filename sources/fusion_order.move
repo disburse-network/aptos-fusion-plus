@@ -99,6 +99,7 @@ module aptos_fusion_plus::fusion_order {
         destination_asset: vector<u8>,      // Destination asset (EVM address or native)
         destination_recipient: vector<u8>,  // EVM address to receive destination assets
         chain_id: u64,                      // Destination chain ID
+        hash: vector<u8>,                   // Hash of the secret for cross-chain swap
         initial_destination_amount: u64,    // Starting price of Dutch auction
         min_destination_amount: u64,        // Minimum price of Dutch auction
         decay_per_second: u64,              // Price decay per second
@@ -433,6 +434,7 @@ module aptos_fusion_plus::fusion_order {
         let destination_asset = fusion_order_ref.destination_asset;
         let destination_recipient = fusion_order_ref.destination_recipient;
         let chain_id = fusion_order_ref.chain_id;
+        let hash = fusion_order_ref.hash;
         let initial_destination_amount = fusion_order_ref.initial_destination_amount;
         let min_destination_amount = fusion_order_ref.min_destination_amount;
         let decay_per_second = fusion_order_ref.decay_per_second;
@@ -483,6 +485,7 @@ module aptos_fusion_plus::fusion_order {
                 destination_asset,
                 destination_recipient,
                 chain_id,
+                hash,
                 initial_destination_amount,
                 min_destination_amount,
                 decay_per_second,

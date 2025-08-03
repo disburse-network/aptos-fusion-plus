@@ -6,6 +6,15 @@ A secure cross-chain atomic swap protocol built on Aptos that enables trustless 
 
 The protocol enables secure cross-chain swaps through a clean separation of concerns with hashlocked and timelocked escrows. It consists of several key components that work together to provide a secure, trustless cross-chain swap experience.
 
+### Latest Deployment Features
+
+The most recent deployment (`testnet-fusion`) includes enhanced event data for improved cross-chain coordination:
+
+- **Enhanced FusionOrderAcceptedEvent**: Now includes hashlock hash for cross-chain verification
+- **Enhanced EscrowCreatedEvent**: Includes hashlock hash, timelock creation timestamp, and chain type
+- **Improved Resolver Coordination**: Better event data enables more robust cross-chain atomic swap coordination
+- **Production Ready**: All contracts compiled and tested on testnet
+
 ## 🧪 Testing Scripts
 
 This repository includes comprehensive testing scripts in the `scripts/` directory that implement a complete cross-chain atomic swap flow on Aptos testnet.
@@ -308,29 +317,53 @@ aptos move publish --named-addresses aptos_fusion_plus=YOUR_ACCOUNT_ADDRESS --ne
 
 The contracts have been deployed to the following networks:
 
-**Testnet:**
-- **Account Address**: `0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd3192186ed8eac`
+**Testnet (Latest):**
+- **Account Address**: `0x2cb284956406fac1d787a0e67612838e8961b08df177ce9e7354560e35b58f10`
 - **Package Name**: `aptos_fusion_plus`
-- **Source Digest**: `E589ACFD8E14A36E2662B4989C7B53B2C968305AD614B241A63726F14022F839`
+- **Profile**: `testnet-fusion`
+- **Features**: Enhanced events with hashlock and timelock data
+- **Explorer**: [View on Aptos Explorer](https://explorer.aptoslabs.com/account/0x2cb284956406fac1d787a0e67612838e8961b08df177ce9e7354560e35b58f10/modules/packages/aptos_fusion_plus?network=testnet)
+
+**Testnet (Legacy):**
+- **Account Address**: `0x4a10e47494bf30cc336fb9243b30150bf351a145b937fd13647abcff9d93ea4d`
+- **Package Name**: `aptos_fusion_plus`
+- **Profile**: `testnet-new`
 
 **Devnet:**
-- **Account Address**: `0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd3192186ed8eac`
+- **Account Address**: `0xde288ee6d0a2aa6e3829dc34902482c4fe971148b855b119fc1b8b398c589d23`
 - **Package Name**: `aptos_fusion_plus`
-- **Source Digest**: `F55716ADDD6B9F76E04DC3F0040E7F4FE5707630978A9423FC7666844F4DA56F`
+- **Profile**: `devnet-new`
 
 **Mainnet:**
 - Not yet deployed (pending security audits and testing)
+
+### Enhanced Event Features
+
+The latest deployment includes enhanced events with additional cross-chain coordination data:
+
+**FusionOrderAcceptedEvent:**
+- Added `hash: vector<u8>` - Hashlock hash for cross-chain verification
+- Enables resolvers to verify matching escrows across chains
+
+**EscrowCreatedEvent:**
+- Added `hash: vector<u8>` - Hashlock hash for cross-chain verification
+- Added `timelock_created_at: u64` - Timelock creation timestamp
+- Added `timelock_chain_type: u8` - Timelock chain type (0=source, 1=destination)
+- Enables proper phase synchronization across chains
 
 ### Interacting with Deployed Contracts
 
 To interact with the deployed contracts, you can use the Aptos CLI or SDK:
 
 ```bash
-# View account resources on testnet
-aptos account list --account 0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd3192186ed8eac --profile testnet
+# View account resources on testnet (latest deployment)
+aptos account list --account 0x2cb284956406fac1d787a0e67612838e8961b08df177ce9e7354560e35b58f10 --profile testnet-fusion
+
+# View account resources on testnet (legacy deployment)
+aptos account list --account 0x4a10e47494bf30cc336fb9243b30150bf351a145b937fd13647abcff9d93ea4d --profile testnet-new
 
 # View account resources on devnet
-aptos account list --account 0x2cb2b191738c0c6311314ea06c4c8e489db62c8df1a72c11bdd3192186ed8eac --profile devnet
+aptos account list --account 0xde288ee6d0a2aa6e3829dc34902482c4fe971148b855b119fc1b8b398c589d23 --profile devnet-new
 ```
 
 

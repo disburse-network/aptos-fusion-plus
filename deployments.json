@@ -14,5 +14,10 @@
     "testnet-new": {
         "address": "0x4a10e47494bf30cc336fb9243b30150bf351a145b937fd13647abcff9d93ea4d",
         "explorer": "https://explorer.aptoslabs.com/account/0x4a10e47494bf30cc336fb9243b30150bf351a145b937fd13647abcff9d93ea4d/modules/packages/aptos_fusion_plus?network=testnet"
+    },
+    "testnet-fusion": {
+        "address": "0x2cb284956406fac1d787a0e67612838e8961b08df177ce9e7354560e35b58f10",
+        "explorer": "https://explorer.aptoslabs.com/account/0x2cb284956406fac1d787a0e67612838e8961b08df177ce9e7354560e35b58f10/modules/packages/aptos_fusion_plus?network=testnet",
+        "description": "Latest deployment with enhanced events including hashlock and timelock data"
     }
 }

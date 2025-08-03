@@ -47,7 +47,10 @@ module aptos_fusion_plus::escrow {
         metadata: Object<Metadata>,     // Asset metadata (must match across chains)
         amount: u64,                    // Asset amount (must match across chains)
         chain_id: u64,                 // Blockchain network identifier
-        is_source_chain: bool          // TRUE = source chain, FALSE = destination chain
+        is_source_chain: bool,         // TRUE = source chain, FALSE = destination chain
+        hash: vector<u8>,              // Hashlock hash for cross-chain verification
+        timelock_created_at: u64,      // Timelock creation timestamp
+        timelock_chain_type: u8        // Timelock chain type (0=source, 1=destination)
     }
 
     #[event]
@@ -391,7 +394,10 @@ module aptos_fusion_plus::escrow {
                 metadata,
                 amount,
                 chain_id,
-                is_source_chain
+                is_source_chain,
+                hash: hashlock::get_hash(&hashlock),
+                timelock_created_at: timelock::get_created_at(&timelock),
+                timelock_chain_type: timelock::get_chain_type(&timelock)
             }
         );
 

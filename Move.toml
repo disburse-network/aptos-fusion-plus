@@ -4,7 +4,7 @@ version = "1.0.0"
 upgrade_policy = "compatible"
 
 [addresses]
-aptos_fusion_plus = "0x4a10e47494bf30cc336fb9243b30150bf351a145b937fd13647abcff9d93ea4d"
+aptos_fusion_plus = "0x2cb284956406fac1d787a0e67612838e8961b08df177ce9e7354560e35b58f10"
 
 [dev-addresses]
 aptos_fusion_plus = "0xde288ee6d0a2aa6e3829dc34902482c4fe971148b855b119fc1b8b398c589d23"
