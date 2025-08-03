@@ -2,16 +2,14 @@
   "name": "aptos-fusion-plus",
   "version": "1.0.0",
   "description": "Cross-chain atomic swap smart contract for Aptos blockchain",
-  "main": "scripts/src/index.ts",
+  "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "test": "cd scripts && npm test",
-    "test:watch": "cd scripts && npm run dev",
-    "build": "cd scripts && npm run build",
-    "start": "cd scripts && npm start",
-    "dev": "cd scripts && npm run dev",
-    "install:scripts": "cd scripts && npm install",
-    "setup": "npm run install:scripts && npm run build"
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "tsx src/index.ts",
+    "test": "tsx src/test.ts",
+    "watch": "nodemon --exec tsx src/index.ts"
   },
   "keywords": [
     "aptos",
@@ -31,5 +29,14 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@aptos-labs/ts-sdk": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "nodemon": "^3.0.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2"
   }
 } 

@@ -1,17 +1,13 @@
 import { Aptos, AptosConfig, Network, Ed25519PrivateKey, Account } from "@aptos-labs/ts-sdk";
 import { FusionPlusClient } from "./fusion-plus-client";
-import { EventListener } from "./event-listener.js";
-
+import dotenv from 'dotenv';
 // Load environment variables
-const dotenv = require('dotenv');
-
-// Load environment variables
-dotenv.config({ path: '../../.env' });
+dotenv.config({ path: './.env' });
 
 // Configuration from environment variables
 const NETWORK = (process.env.NETWORK as Network) || Network.TESTNET;
-const CONTRACT_ADDRESS_TESTNET = process.env.CONTRACT_ADDRESS_TESTNET as string;
-const CONTRACT_ADDRESS_DEVNET = process.env.CONTRACT_ADDRESS_DEVNET as string;
+const CONTRACT_ADDRESS_TESTNET = process.env.CONTRACT_ADDRESS_TESTNET || "0xd4d479bbcad621f806f2ed82aae05c6bcb98b01c02a056933d074729f4872192";
+const CONTRACT_ADDRESS_DEVNET = process.env.CONTRACT_ADDRESS_DEVNET || "0xa39c90ee66e21c276192abcb0bd02b6e791b6f13f9b51c272aa4c70f4eb99e50";
 
 // Private keys from environment variables
 const OWNER_PRIVATE_KEY = process.env.OWNER_PRIVATE_KEY as string;
@@ -59,7 +55,7 @@ const DEPLOYMENTS = {
   }
 };
 
-console.log("🚀 Starting Aptos Fusion Plus Contract Testing");
+console.log("🧪 Starting Aptos Fusion Plus Contract Tests");
 
 // Initialize Aptos client
 const config = new AptosConfig({ network: NETWORK });
@@ -81,36 +77,102 @@ console.log(`📝 User address: ${user.accountAddress}`);
 // Initialize FusionPlusClient
 const fusionClient = new FusionPlusClient(aptos, DEPLOYMENTS.testnet.address);
 
-// Initialize event listener for testnet
-const eventListener = new EventListener(aptos, DEPLOYMENTS.testnet.address);
-
-// Start listening to events
-console.log("👂 Starting event listener...");
-await eventListener.startListening();
-
-// Test contract functions
-console.log("🧪 Testing contract functions...");
-await testContractFunctions(fusionClient, user, resolver, owner);
-
-// Main function
-async function main() {
-  console.log("🚀 Starting Aptos Fusion Plus Testing Suite");
-  
+async function runTests() {
   // Note: For testnet, accounts need to be funded manually via https://aptos.dev/network/faucet
   console.log("💰 Note: For testnet, accounts need to be funded manually via https://aptos.dev/network/faucet");
   console.log("💰 Testing with existing accounts that should have funds...");
   
-  // Start listening to events
-  console.log("👂 Starting event listener...");
-  await eventListener.startListening();
+  // Run tests
+  await testContractInfo(fusionClient);
+  // Skip resolver registration since it's already registered
+  console.log("\n📝 Skipping resolver registration (already registered)...");
+  const orderTxnHash = await testFusionOrderCreation(fusionClient, user);
+  if (orderTxnHash) {
+    await testAcceptFusionOrder(fusionClient, resolver, orderTxnHash);
+  } else {
+    console.log("⚠️ Skipping fusion order acceptance test due to failed order creation");
+  }
+  const escrowTxnHash = await testEscrowCreation(fusionClient, resolver);
+  if (escrowTxnHash) {
+    await testEscrowWithdraw(fusionClient, resolver, escrowTxnHash);
+  } else {
+    console.log("⚠️ Skipping escrow withdraw test due to failed escrow creation");
+  }
   
-  // Test contract functions
-  console.log("🧪 Testing contract functions...");
-  await testContractFunctions(fusionClient, user, resolver, owner);
+  console.log("✅ All tests completed!");
 }
 
-// Run the main function
-main().catch(console.error);
+async function testContractInfo(fusionClient: FusionPlusClient) {
+  console.log("\n📊 Testing Contract Info...");
+  
+  try {
+    const contractInfo = await fusionClient.getContractInfo();
+    console.log("Contract info:", contractInfo);
+    
+    const resources = await fusionClient.getContractResources();
+    console.log(`Found ${resources.length} resources`);
+    
+    console.log("✅ Contract info test passed");
+  } catch (error) {
+    console.error("❌ Contract info test failed:", error);
+  }
+}
+
+async function testFusionOrderCreation(fusionClient: FusionPlusClient, user: Account) {
+  console.log("\n🔥 Testing Fusion Order Creation...");
+  
+  try {
+    // Test fusion order creation with real parameters from Explorer_params.md
+    console.log("Testing fusion order creation...");
+    
+    // APT metadata (0xa for APT)
+    const aptMetadata = "0xa";
+    
+    // Destination asset (native asset - all zeros)
+    const destinationAsset = new Array(32).fill(0);
+    
+    // Destination recipient (EVM address - 20 bytes)
+    const destinationRecipient = [
+      116, 45, 53, 204, 102, 52, 192, 83, 41, 37, 
+      163, 184, 212, 201, 219, 150, 196, 180, 139, 119
+    ];
+    
+    // Hash for cross-chain verification (32 bytes)
+    const hash = [
+      18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 
+      52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52
+    ];
+    
+    const createOrderPayload = fusionClient.buildTransactionPayload(
+      "fusion_order::new_entry",
+      [],
+      [
+        aptMetadata, // source_metadata
+        1000000, // source_amount (1 APT)
+        destinationAsset, // destination_asset
+        destinationRecipient, // destination_recipient
+        137, // chain_id (Polygon)
+        hash, // hash
+        1000000, // initial_destination_amount
+        900000, // min_destination_amount
+        100, // decay_per_second
+      ]
+    );
+    
+    console.log("Created fusion order payload:", createOrderPayload);
+    
+    // Submit the transaction
+    console.log("Submitting fusion order creation transaction...");
+    const txn = await fusionClient.submitTransaction(user, createOrderPayload);
+    console.log("Fusion order creation transaction:", txn.hash);
+    
+    console.log("✅ Fusion order creation test completed");
+    return txn.hash; // Return the transaction hash for later use
+  } catch (error) {
+    console.error("❌ Fusion order creation test failed:", error);
+    return null;
+  }
+}
 
 async function getFusionOrderObjectAddress(contractAddress: string, transactionHash?: string): Promise<string | null> {
   console.log("🔍 Getting fusion order object address from events...");
@@ -199,6 +261,102 @@ async function getFusionOrderObjectAddress(contractAddress: string, transactionH
     
   } catch (error) {
     console.error("❌ Error fetching events:", error);
+    return null;
+  }
+}
+
+async function testAcceptFusionOrder(fusionClient: FusionPlusClient, resolver: Account, orderTxnHash: string) {
+  console.log("\n🤝 Testing Accept Fusion Order...");
+  
+  try {
+    // Get the real fusion order object address from events
+    const fusionOrderObjectAddress = await getFusionOrderObjectAddress(DEPLOYMENTS.testnet.address, orderTxnHash);
+    
+    if (!fusionOrderObjectAddress) {
+      console.log("⚠️ Could not get fusion order address from events, using placeholder...");
+      const placeholderAddress = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+      console.log("📝 Using placeholder fusion order object address:", placeholderAddress);
+      
+      const acceptOrderPayload = fusionClient.buildTransactionPayload(
+        "escrow::new_from_order_entry",
+        [],
+        [
+          placeholderAddress, // fusion_order object address
+        ]
+      );
+      
+      console.log("Created accept order payload:", acceptOrderPayload);
+      
+      // Submit the transaction
+      console.log("Submitting fusion order acceptance transaction...");
+      const txn = await fusionClient.submitTransaction(resolver, acceptOrderPayload);
+      console.log("Fusion order acceptance transaction:", txn.hash);
+      
+      console.log("✅ Fusion order acceptance test completed (with placeholder)");
+      return;
+    }
+    
+    console.log("📝 Using real fusion order object address:", fusionOrderObjectAddress);
+    
+    const acceptOrderPayload = fusionClient.buildTransactionPayload(
+      "escrow::new_from_order_entry",
+      [],
+      [
+        fusionOrderObjectAddress, // real fusion_order object address
+      ]
+    );
+    
+    console.log("Created accept order payload:", acceptOrderPayload);
+    
+    // Submit the transaction
+    console.log("Submitting fusion order acceptance transaction...");
+    const txn = await fusionClient.submitTransaction(resolver, acceptOrderPayload);
+    console.log("Fusion order acceptance transaction:", txn.hash);
+    
+    console.log("✅ Fusion order acceptance test completed (with real address)");
+  } catch (error) {
+    console.error("❌ Fusion order acceptance test failed:", error);
+  }
+}
+
+async function testEscrowCreation(fusionClient: FusionPlusClient, resolver: Account) {
+  console.log("\n🔒 Testing Escrow Creation...");
+  
+  try {
+    // Test escrow creation with real parameters
+    console.log("Testing escrow creation...");
+    
+    // Convert recipient address to proper format (pad to 64 characters)
+    const recipientAddress = "0x" + "742d35cc6634c0532925a3b8d4c9db96c4b48b77".padStart(64, '0');
+    
+    const hash = [
+      18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 
+      52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52
+    ];
+    
+    const createEscrowPayload = fusionClient.buildTransactionPayload(
+      "escrow::new_from_resolver_entry",
+      [],
+      [
+        recipientAddress, // recipient_address as string (padded to 64 chars)
+        "0xa", // metadata (APT)
+        950000, // amount
+        137, // chain_id (Polygon)
+        hash, // hash
+      ]
+    );
+    
+    console.log("Created escrow payload:", createEscrowPayload);
+    
+    // Submit the transaction
+    console.log("Submitting escrow creation transaction...");
+    const txn = await fusionClient.submitTransaction(resolver, createEscrowPayload);
+    console.log("Escrow creation transaction:", txn.hash);
+    
+    console.log("✅ Escrow creation test completed");
+    return txn.hash; // Return the transaction hash for later use
+  } catch (error) {
+    console.error("❌ Escrow creation test failed:", error);
     return null;
   }
 }
@@ -294,129 +452,12 @@ async function getEscrowObjectAddress(contractAddress: string, transactionHash?:
   }
 }
 
-async function testContractFunctions(fusionClient: FusionPlusClient, user: Account, resolver: Account, owner: Account) {
+async function testEscrowWithdraw(fusionClient: FusionPlusClient, resolver: Account, escrowTxnHash: string) {
+  console.log("\n💸 Testing Escrow Withdraw...");
+  
   try {
-    // Test basic contract interaction
-    console.log("📊 Getting contract info...");
-    const contractInfo = await fusionClient.getContractInfo();
-    console.log("Contract info:", contractInfo);
-    
-    // Skip resolver registration since it's already registered
-    console.log("\n📝 Skipping resolver registration (already registered)...");
-    
-    // Test fusion order creation
-    console.log("\n🔥 Testing fusion order creation...");
-    const aptMetadata = "0xa"; // APT metadata
-    const destinationAsset = new Array(32).fill(0); // Native asset
-    const destinationRecipient = [
-      116, 45, 53, 204, 102, 52, 192, 83, 41, 37, 
-      163, 184, 212, 201, 219, 150, 196, 180, 139, 119
-    ]; // EVM address
-    const hash = [
-      18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 
-      52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52
-    ]; // 32-byte hash
-    
-    const createOrderPayload = fusionClient.buildTransactionPayload(
-      "fusion_order::new_entry",
-      [],
-      [
-        aptMetadata, // source_metadata
-        1000000, // source_amount (1 APT)
-        destinationAsset, // destination_asset
-        destinationRecipient, // destination_recipient
-        137, // chain_id (Polygon)
-        hash, // hash
-        1000000, // initial_destination_amount
-        900000, // min_destination_amount
-        100, // decay_per_second
-      ]
-    );
-    console.log("Fusion order creation payload created");
-    
-    // Submit fusion order creation
-    console.log("Submitting fusion order creation transaction...");
-    const orderTxn = await fusionClient.submitTransaction(user, createOrderPayload);
-    console.log("Fusion order creation transaction:", orderTxn.hash);
-    
-    // Wait a bit for the transaction to be processed
-    console.log("⏳ Waiting for transaction to be processed...");
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    // Test fusion order acceptance with real address
-    console.log("\n🤝 Testing fusion order acceptance with real address...");
-    const fusionOrderObjectAddress = await getFusionOrderObjectAddress(DEPLOYMENTS.testnet.address, orderTxn.hash);
-    
-    let acceptTxn: any; // Declare the variable
-    
-    if (!fusionOrderObjectAddress) {
-      console.log("⚠️ Could not get fusion order address from events, using placeholder...");
-      const placeholderAddress = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
-      console.log("📝 Using placeholder fusion order object address:", placeholderAddress);
-      
-      const acceptOrderPayload = fusionClient.buildTransactionPayload(
-        "escrow::new_from_order_entry",
-        [],
-        [
-          placeholderAddress, // fusion_order object address
-        ]
-      );
-      console.log("Fusion order acceptance payload created");
-      
-      // Submit fusion order acceptance
-      console.log("Submitting fusion order acceptance transaction...");
-      acceptTxn = await fusionClient.submitTransaction(resolver, acceptOrderPayload);
-      console.log("Fusion order acceptance transaction:", acceptTxn.hash);
-    } else {
-      console.log("📝 Using real fusion order object address:", fusionOrderObjectAddress);
-      
-      const acceptOrderPayload = fusionClient.buildTransactionPayload(
-        "escrow::new_from_order_entry",
-        [],
-        [
-          fusionOrderObjectAddress, // real fusion_order object address
-        ]
-      );
-      console.log("Fusion order acceptance payload created");
-      
-      // Submit fusion order acceptance
-      console.log("Submitting fusion order acceptance transaction...");
-      acceptTxn = await fusionClient.submitTransaction(resolver, acceptOrderPayload);
-      console.log("Fusion order acceptance transaction:", acceptTxn.hash);
-    }
-    
-    // Test escrow creation
-    console.log("\n🔒 Testing escrow creation...");
-    // Convert recipient address to proper format (pad to 64 characters)
-    const recipientAddress = "0x" + "742d35cc6634c0532925a3b8d4c9db96c4b48b77".padStart(64, '0');
-    
-    const createEscrowPayload = fusionClient.buildTransactionPayload(
-      "escrow::new_from_resolver_entry",
-      [],
-      [
-        recipientAddress, // recipient_address as string (padded to 64 chars)
-        aptMetadata, // metadata (APT)
-        950000, // amount
-        137, // chain_id (Polygon)
-        hash, // hash
-      ]
-    );
-    console.log("Escrow creation payload created");
-    
-    // Submit escrow creation
-    console.log("Submitting escrow creation transaction...");
-    const escrowTxn = await fusionClient.submitTransaction(resolver, createEscrowPayload);
-    console.log("Escrow creation transaction:", escrowTxn.hash);
-    
-    // Wait a bit for the transaction to be processed
-    console.log("⏳ Waiting for escrow transaction to be processed...");
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    // Test escrow withdraw with real address
-    console.log("\n💸 Testing escrow withdraw with real address...");
-    const escrowObjectAddress = await getEscrowObjectAddress(DEPLOYMENTS.testnet.address, escrowTxn.hash);
-    
-    let withdrawTxn: any; // Declare the variable
+    // Get the real escrow object address from events
+    const escrowObjectAddress = await getEscrowObjectAddress(DEPLOYMENTS.testnet.address, escrowTxnHash);
     
     if (!escrowObjectAddress) {
       console.log("⚠️ Could not get escrow address from events, using placeholder...");
@@ -424,6 +465,7 @@ async function testContractFunctions(fusionClient: FusionPlusClient, user: Accou
       console.log("📝 Using placeholder escrow object address:", placeholderAddress);
       
       // The secret that matches the hashlock (this should be the preimage of the hash)
+      // In a real scenario, this would be the actual secret used to create the hashlock
       const secret = [
         18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 
         52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52
@@ -437,61 +479,48 @@ async function testContractFunctions(fusionClient: FusionPlusClient, user: Accou
           secret, // secret to verify against hashlock
         ]
       );
-      console.log("Escrow withdraw payload created");
       
-      // Submit escrow withdraw
+      console.log("Created withdraw payload:", withdrawPayload);
+      
+      // Submit the transaction
       console.log("Submitting escrow withdraw transaction...");
-      withdrawTxn = await fusionClient.submitTransaction(resolver, withdrawPayload);
-      console.log("Escrow withdraw transaction:", withdrawTxn.hash);
-    } else {
-      console.log("📝 Using real escrow object address:", escrowObjectAddress);
+      const txn = await fusionClient.submitTransaction(resolver, withdrawPayload);
+      console.log("Escrow withdraw transaction:", txn.hash);
       
-      // The secret that matches the hashlock (this should be the preimage of the hash)
-      const secret = [
-        18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 
-        52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52
-      ];
-      
-      const withdrawPayload = fusionClient.buildTransactionPayload(
-        "escrow::withdraw",
-        [],
-        [
-          escrowObjectAddress, // real escrow object address
-          secret, // secret to verify against hashlock
-        ]
-      );
-      console.log("Escrow withdraw payload created");
-      
-      // Submit escrow withdraw
-      console.log("Submitting escrow withdraw transaction...");
-      withdrawTxn = await fusionClient.submitTransaction(resolver, withdrawPayload);
-      console.log("Escrow withdraw transaction:", withdrawTxn.hash);
+      console.log("✅ Escrow withdraw test completed (with placeholder)");
+      return;
     }
     
-    console.log("✅ All contract function tests completed successfully");
-    console.log("\n📋 Summary of submitted transactions:");
-    console.log("  - Fusion order creation:", orderTxn.hash);
-    if (fusionOrderObjectAddress) {
-      console.log("  - Fusion order acceptance (with real address):", acceptTxn.hash);
-    } else {
-      console.log("  - Fusion order acceptance (with placeholder):", acceptTxn.hash);
-    }
-    console.log("  - Escrow creation:", escrowTxn.hash);
-    if (escrowObjectAddress) {
-      console.log("  - Escrow withdraw (with real address):", withdrawTxn.hash);
-    } else {
-      console.log("  - Escrow withdraw (with placeholder):", withdrawTxn.hash);
-    }
+    console.log("📝 Using real escrow object address:", escrowObjectAddress);
     
+    // The secret that matches the hashlock (this should be the preimage of the hash)
+    // In a real scenario, this would be the actual secret used to create the hashlock
+    const secret = [
+      18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 
+      52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52
+    ];
+    
+    const withdrawPayload = fusionClient.buildTransactionPayload(
+      "escrow::withdraw",
+      [],
+      [
+        escrowObjectAddress, // real escrow object address
+        secret, // secret to verify against hashlock
+      ]
+    );
+    
+    console.log("Created withdraw payload:", withdrawPayload);
+    
+    // Submit the transaction
+    console.log("Submitting escrow withdraw transaction...");
+    const txn = await fusionClient.submitTransaction(resolver, withdrawPayload);
+    console.log("Escrow withdraw transaction:", txn.hash);
+    
+    console.log("✅ Escrow withdraw test completed (with real address)");
   } catch (error) {
-    console.error("❌ Error testing contract functions:", error);
+    console.error("❌ Escrow withdraw test failed:", error);
   }
 }
 
-// Handle graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n🛑 Shutting down gracefully...');
-  process.exit(0);
-});
-
-main().catch(console.error); 
+// Run tests
+runTests().catch(console.error); 
