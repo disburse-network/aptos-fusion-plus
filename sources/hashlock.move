@@ -1,5 +1,5 @@
 module aptos_fusion_plus::hashlock {
-    use std::hash;
+    use aptos_std::aptos_hash;
     use std::vector;
 
     // - - - - ERROR CODES - - - -
@@ -47,7 +47,12 @@ module aptos_fusion_plus::hashlock {
     /// @return bool True if the secret matches the hashlock, false otherwise.
     public fun verify_hashlock(hashlock: &HashLock, secret: vector<u8>): bool {
         assert!(is_valid_secret(&secret), EINVALID_SECRET);
-        hashlock.hash == hash::sha3_256(secret)
+        hashlock.hash == aptos_hash::keccak256(secret)
+    }
+
+    #[view]
+    public fun verify_hash_with_secret(hash: vector<u8>, secret: vector<u8>): bool {
+        aptos_hash::keccak256(secret) == hash
     }
 
     /// Gets the hash value from a HashLock.
@@ -88,7 +93,7 @@ module aptos_fusion_plus::hashlock {
 
     #[test_only]
     public fun create_hash_for_test(secret: vector<u8>): vector<u8> {
-        hash::sha3_256(secret)
+        aptos_hash::keccak256(secret)
     }
 
     #[test]

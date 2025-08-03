@@ -6,5 +6,13 @@
     "testnet": {
         "address": "0xd4d479bbcad621f806f2ed82aae05c6bcb98b01c02a056933d074729f4872192",
         "explorer": "https://explorer.aptoslabs.com/account/0xd4d479bbcad621f806f2ed82aae05c6bcb98b01c02a056933d074729f4872192/modules/packages/aptos_fusion_plus?network=testnet"
+    },
+    "devnet-new": {
+        "address": "0xde288ee6d0a2aa6e3829dc34902482c4fe971148b855b119fc1b8b398c589d23",
+        "explorer": "https://explorer.aptoslabs.com/account/0xde288ee6d0a2aa6e3829dc34902482c4fe971148b855b119fc1b8b398c589d23/modules/packages/aptos_fusion_plus?network=devnet"
+    },
+    "testnet-new": {
+        "address": "0x4a10e47494bf30cc336fb9243b30150bf351a145b937fd13647abcff9d93ea4d",
+        "explorer": "https://explorer.aptoslabs.com/account/0x4a10e47494bf30cc336fb9243b30150bf351a145b937fd13647abcff9d93ea4d/modules/packages/aptos_fusion_plus?network=testnet"
     }
 }
