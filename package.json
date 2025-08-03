@@ -31,7 +31,8 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
-    "@aptos-labs/ts-sdk": "^4.0.0"
+    "@aptos-labs/ts-sdk": "^4.0.0",
+    "dotenv": "^17.2.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -39,4 +40,4 @@
     "tsx": "^4.20.3",
     "typescript": "^5.9.2"
   }
-} 
+}
